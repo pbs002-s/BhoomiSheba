@@ -71,6 +71,7 @@ export interface LandDocument {
 export interface Complaint {
   id: string;
   trackingNo: string;
+  parcelId: string;
   complainant: string;
   phone: string;
   category: string;
@@ -78,6 +79,22 @@ export interface Complaint {
   assignedOffice: string;
   status: string;
   createdAt: string;
+}
+
+export interface GeoJsonGeometry {
+  type: 'Polygon';
+  coordinates: number[][][]; // [ [ [lng, lat], ... ] ]
+}
+
+export interface GeoJsonFeature {
+  type: 'Feature';
+  geometry: GeoJsonGeometry;
+  properties?: {
+    dagNo?: string;
+    areaDecimal?: number;
+    landClass?: string;
+    [key: string]: any;
+  };
 }
 
 export interface Parcel {
@@ -97,7 +114,7 @@ export interface Parcel {
   nidNumber: string;
   phone: string;
   email?: string | null;
-  geojsonBoundary?: unknown;
+  geojsonBoundary?: GeoJsonFeature | any;
   taxRecords?: TaxRecord[];
   mutations?: Mutation[];
   timelineEvents?: TimelineEvent[];
@@ -115,4 +132,33 @@ export interface Session {
   office?: string;
   parcels: string[];
   signedInAt: string;
+}
+
+export interface LandUnits {
+  decimal: number;
+  katha: number;
+  bigha: number;
+  acre: number;
+  squareFeet: number;
+  squareMetres: number;
+}
+
+export interface FaraezInput {
+  totalDecimal: number;
+  sons: number;
+  daughters: number;
+  wife: number;
+  husband: number;
+  father: number;
+  mother: number;
+}
+
+export interface FaraezShare {
+  relation: string;
+  relationBn: string;
+  count: number;
+  fraction: string;
+  totalDecimal: number;
+  perPersonDecimal: number;
+  percentage: number;
 }

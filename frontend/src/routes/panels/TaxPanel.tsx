@@ -272,6 +272,7 @@ export default function TaxPanel({ parcel, onChanged }: { parcel: Parcel; onChan
                     dagNo={parcel.dagNo.split(/[\/ ]/)[0]}
                     areaDecimal={parcel.areaDecimal}
                     landClass={parcel.landClass}
+                    geojson={parcel.geojsonBoundary}
                   />
                 </div>
                 <div className="text-right">

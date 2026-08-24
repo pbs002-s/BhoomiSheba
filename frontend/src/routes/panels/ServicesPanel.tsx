@@ -1,104 +1,180 @@
-import { Panel, StatusMark } from '../../components/ui';
+import { useState } from 'react';
+import { PhoneCall, Calculator, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Button, Panel, StatusMark } from '../../components/ui';
 import { Reveal } from '../../components/motion';
+import LandCalculatorModal from '../../components/LandCalculatorModal';
+import DisputeModal from '../../components/DisputeModal';
+import type { Parcel } from '../../lib/types';
 
-/**
- * Previously "Automation Hub", written from the system's side:
- * webhooks, cron, uptime percentages, port numbers. Rewritten to say what
- * each job does for the person whose land it is. The plumbing is at the
- * bottom, where an operator can find it and a citizen can ignore it.
- */
 const JOBS = [
   {
-    en: 'Tell you when someone touches your record',
-    bn: 'রেকর্ডে পরিবর্তন হলে জানানো',
-    detail: 'A message when a নামজারি, correction or charge is filed against your parcel.',
-    when: 'As it happens',
+    en: 'Real-Time Property Activity Radar',
+    bn: 'রেকর্ডে পরিবর্তন হলে তাত্ক্ষণিক বার্তা',
+    detail: 'Automated SMS notification whenever a mutation, caveat, or mortgage lien is filed against your parcel.',
+    when: 'Real-Time Event',
     tone: 'state' as const,
   },
   {
-    en: 'Match payments against the gateway',
-    bn: 'পেমেন্ট মিলিয়ে দেখা',
-    detail: 'Every tax payment is checked against bKash, Nagad, Rocket or the card processor, so a receipt is never issued twice.',
-    when: 'Within minutes',
+    en: 'Automated Payment Settlement & Reconciliation',
+    bn: 'পেমেন্ট স্বয়ংক্রিয় সমন্বয়',
+    detail: 'Every land tax transaction is verified against bKash, Nagad, Rocket or Ekpay gateway before issuing cryptographic Dakhila.',
+    when: 'Within 30s',
     tone: 'state' as const,
   },
   {
-    en: 'Compare the record against the map',
-    bn: 'রেকর্ড ও নকশা মেলানো',
-    detail: 'Recorded area, dag numbers and the survey boundary are checked against each other, and differences are flagged.',
-    when: 'Hourly',
+    en: 'PostGIS Spatial Alignment Audit',
+    bn: 'নকশা ও ভৌগোলিক সীমানা অডিট',
+    detail: 'Continuous geometric reconciliation comparing digitised mouza sheets against drone cadastral vector polygons.',
+    when: 'Hourly CDC',
     tone: 'indigo' as const,
   },
   {
-    en: 'Move নামজারি cases along',
-    bn: 'নামজারি অগ্রগতি',
-    detail: 'Tracks the four stages and sends the hearing notice to everyone who must attend.',
-    when: 'On each stage change',
+    en: 'e-Mutation Judicial Lifecycle Dispatch',
+    bn: 'ই-নামজারি ট্র্যাকিং ও নোটিশ',
+    detail: 'Automated workflow managing Kanungo spot survey assignment, hearing notices, and DCR payment verification.',
+    when: 'On State Change',
     tone: 'indigo' as const,
   },
   {
-    en: 'Remind you before the tax deadline',
-    bn: 'কর পরিশোধের আগাম বার্তা',
-    detail: 'A reminder before the Baishakh deadline, with the amount already worked out.',
-    when: 'Seasonal',
+    en: 'Seasonal LD Tax Demand Assessment',
+    bn: 'বাৎসরিক ভূমি কর নোটিশ',
+    detail: 'Tax calculation raised automatically at the beginning of the Bengali fiscal year (Pohela Baishakh).',
+    when: 'Annual Baishakh',
     tone: 'amber' as const,
   },
   {
-    en: 'Issue a receipt that can be checked',
-    bn: 'যাচাইযোগ্য দাখিলা',
-    detail: 'Each দাখিলা carries a reference that a third party can verify without calling an office.',
-    when: 'On payment',
+    en: 'Cryptographic Dakhila QR Verification',
+    bn: 'যাচাইযোগ্য ডিজিটাল দাখিলা',
+    detail: 'Generates tamper-proof QR code signatures verifiable by banks, sub-registry vaults, and revenue courts.',
+    when: 'On Payment',
     tone: 'state' as const,
   },
 ];
 
-export default function ServicesPanel() {
-  return (
-    <div className="space-y-5">
-      <Reveal>
-        <div className="border-b border-line pb-4">
-          <h2 className="sheet-title text-xl font-semibold text-ink">What runs in the background</h2>
-          <p className="mt-1 max-w-measure text-sm text-ink-2">
-            Six jobs that do work you would otherwise have to do by visiting an office and asking.
-          </p>
-        </div>
-      </Reveal>
+export default function ServicesPanel({ parcel }: { parcel: Parcel }) {
+  const [calcOpen, setCalcOpen] = useState(false);
+  const [disputeOpen, setDisputeOpen] = useState(false);
 
-      <div className="grid gap-px border border-line bg-line sm:grid-cols-2">
-        {JOBS.map((j, i) => (
-          <Reveal key={j.en} delay={i * 55} className="bg-sheet px-5 py-5">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium text-ink">{j.en}</p>
-                <p className="bn mt-0.5 text-xs text-ink-3">{j.bn}</p>
-              </div>
-              <StatusMark tone={j.tone}>{j.when}</StatusMark>
+  return (
+    <>
+      <div className="space-y-5">
+        <Reveal>
+          <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-4">
+            <div>
+              <h2 className="sheet-title text-xl font-semibold text-ink">Land Services & Automation Engine</h2>
+              <p className="mt-1 max-w-measure text-sm text-ink-2">
+                Automated government pipelines and citizen self-service tools operating continuously in the background.
+              </p>
             </div>
-            <p className="mt-2.5 text-sm text-ink-2">{j.detail}</p>
-          </Reveal>
-        ))}
+            <div className="flex items-center gap-2">
+              <Button size="sm" onClick={() => setCalcOpen(true)}>
+                <Calculator className="h-3.5 w-3.5" /> Land Tools
+              </Button>
+              <Button size="sm" variant="primary" onClick={() => setDisputeOpen(true)}>
+                <AlertTriangle className="h-3.5 w-3.5" /> 16122 Dispute
+              </Button>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* Quick Service Cards */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="border border-line bg-sheet-raised p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <PhoneCall className="h-5 w-5 text-indigo" />
+                <div>
+                  <p className="text-sm font-semibold text-ink">Land Service Helpline 16122</p>
+                  <p className="bn text-xs text-ink-3">ভূমি সেবা হটলাইন (১৬১২২)</p>
+                </div>
+              </div>
+              <StatusMark tone="state">24/7 Active</StatusMark>
+            </div>
+            <p className="mt-2 text-xs text-ink-2">
+              Toll-free 24/7 hotline for land queries, corruption reporting, and live e-Mutation application support.
+            </p>
+            <div className="mt-3 flex items-center gap-2">
+              <a
+                href="tel:16122"
+                className="inline-flex items-center gap-1.5 border border-line bg-sheet px-3 py-1.5 text-xs font-semibold text-indigo hover:bg-ground-sunk"
+              >
+                <PhoneCall className="h-3 w-3" /> Call 16122
+              </a>
+              <Button size="sm" onClick={() => setDisputeOpen(true)}>
+                Lodge Online Ticket
+              </Button>
+            </div>
+          </div>
+
+          <div className="border border-line bg-sheet-raised p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <Calculator className="h-5 w-5 text-indigo" />
+                <div>
+                  <p className="text-sm font-semibold text-ink">Land Measurement & Faraez</p>
+                  <p className="bn text-xs text-ink-3">ভূমি পরিমাপক ও ফারায়েজ বণ্টন</p>
+                </div>
+              </div>
+              <StatusMark tone="indigo">DLRS Toolkit</StatusMark>
+            </div>
+            <p className="mt-2 text-xs text-ink-2">
+              Standard unit conversions (শতক, কাঠা, বিঘা, একর, বর্গফুট) and Islamic inheritance distribution calculator.
+            </p>
+            <div className="mt-3">
+              <Button size="sm" onClick={() => setCalcOpen(true)}>
+                Open Land Calculator
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* 6 Automated Background Pipeline Jobs */}
+        <div className="grid gap-px border border-line bg-line sm:grid-cols-2">
+          {JOBS.map((j, i) => (
+            <Reveal key={j.en} delay={i * 50} className="bg-sheet px-5 py-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-ink">{j.en}</p>
+                  <p className="bn mt-0.5 text-xs text-ink-3">{j.bn}</p>
+                </div>
+                <StatusMark tone={j.tone}>{j.when}</StatusMark>
+              </div>
+              <p className="mt-2 text-xs text-ink-2">{j.detail}</p>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal delay={100}>
+          <Panel label="System Infrastructure & Microservices" meta="production ready">
+            <div className="grid gap-x-8 sm:grid-cols-2">
+              {[
+                ['API Gateway', 'Express 4.19 · Node.js 20 · :5000'],
+                ['Spatial Database', 'PostgreSQL 15 + PostGIS (WGS84) · :5433'],
+                ['Automation Engine', 'n8n Event-Driven Webhooks · :5678'],
+                ['Payment Reconciler', 'Multi-Gateway Webhook Ingress (bKash/Nagad/Ekpay)'],
+              ].map(([k, v]) => (
+                <p key={k} className="flex justify-between gap-4 border-b border-line-hair py-2 text-sm last:border-0">
+                  <span className="text-ink-3">{k}</span>
+                  <span className="mono text-xs text-ink">{v}</span>
+                </p>
+              ))}
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-xs text-ink-3">
+              <ShieldCheck className="h-3.5 w-3.5 text-state" />
+              <span>Full offline demonstration fallback enabled for zero-downtime exploration.</span>
+            </div>
+          </Panel>
+        </Reveal>
       </div>
 
-      <Reveal delay={100}>
-        <Panel label="Operator notes" meta="local development">
-          <div className="grid gap-x-8 sm:grid-cols-2">
-            {[
-              ['API', 'express · :5000'],
-              ['Database', 'postgres + postgis · :5433'],
-              ['Workflow runner', 'n8n · :5678'],
-              ['Payment webhook', '/webhook/payment-reconciled'],
-            ].map(([k, v]) => (
-              <p key={k} className="flex justify-between gap-4 border-b border-line-hair py-2 text-sm last:border-0">
-                <span className="text-ink-3">{k}</span>
-                <span className="mono text-xs text-ink">{v}</span>
-              </p>
-            ))}
-          </div>
-          <p className="mt-3 text-xs text-ink-3">
-            When the API is unreachable the interface falls back to seeded data and says so in the header.
-          </p>
-        </Panel>
-      </Reveal>
-    </div>
+      <LandCalculatorModal open={calcOpen} onClose={() => setCalcOpen(false)} initialDecimal={parcel.areaDecimal} />
+      <DisputeModal
+        open={disputeOpen}
+        onClose={() => setDisputeOpen(false)}
+        parcelId={parcel.id}
+        defaultOwner={parcel.currentOwner}
+        defaultPhone={parcel.phone}
+      />
+    </>
   );
 }

@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle2, ArrowRight, XCircle } from 'lucide-react';
 import type { Mutation, MutationStatus, Parcel } from '../../lib/types';
-import { fileMutation } from '../../lib/api';
+import { fileMutation, advanceMutation, readSession } from '../../lib/api';
 import { Button, Field, Panel, StatusMark, inputClass } from '../../components/ui';
 import { Reveal } from '../../components/motion';
 import Modal from '../../components/Modal';
 import { cx, shortDate, taka } from '../../lib/format';
 
-/* A নামজারি genuinely is a sequence, so it is numbered and drawn as one. */
 const STAGES: Array<{ key: MutationStatus; en: string; bn: string }> = [
   { key: 'SUBMITTED', en: 'Filed', bn: 'আবেদন' },
   { key: 'KANUNGO_VERIFICATION', en: 'Field survey', bn: 'সরেজমিন' },
@@ -47,7 +46,9 @@ function StageTrack({ status }: { status: MutationStatus }) {
             >
               {String(i + 1).padStart(2, '0')}
             </span>
-            <span className={cx('mt-1 block text-xs', active || done ? 'text-ink' : 'text-ink-3')}>{s.en}</span>
+            <span className={cx('mt-1 block text-xs font-medium', active || done ? 'text-ink' : 'text-ink-3')}>
+              {s.en}
+            </span>
             <span className="bn block text-2xs text-ink-3">{s.bn}</span>
           </li>
         );
@@ -57,9 +58,13 @@ function StageTrack({ status }: { status: MutationStatus }) {
 }
 
 export default function MutationsPanel({ parcel, onChanged }: { parcel: Parcel; onChanged: () => void }) {
+  const session = readSession();
+  const isOfficer = session?.role === 'officer';
+
   const mutations = parcel.mutations ?? [];
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [actingId, setActingId] = useState<string | null>(null);
   const [filed, setFiled] = useState<Mutation | null>(null);
   const [form, setForm] = useState({ applicantName: '', applicantNid: '', applicantPhone: '', proposedOwner: '' });
 
@@ -77,16 +82,32 @@ export default function MutationsPanel({ parcel, onChanged }: { parcel: Parcel; 
     onChanged();
   };
 
+  const handleAdvance = async (mutationId: string, action?: 'REJECT') => {
+    setActingId(mutationId);
+    await advanceMutation(mutationId, parcel.id, {
+      action,
+      officerNote: action === 'REJECT' ? 'Rejected by AC (Land)' : 'Stage verified in revenue court',
+    });
+    setActingId(null);
+    onChanged();
+  };
+
   return (
     <>
       <div className="space-y-5">
         <Reveal>
           <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-4">
             <div>
-              <h2 className="sheet-title text-xl font-semibold text-ink">নামজারি</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="sheet-title text-xl font-semibold text-ink">নামজারি (e-Mutation)</h2>
+                {isOfficer && (
+                  <span className="border border-indigo/40 bg-indigo-soft px-2 py-0.5 text-2xs font-semibold text-indigo">
+                    Officer Workbench
+                  </span>
+                )}
+              </div>
               <p className="mt-1 text-sm text-ink-2">
-                Applications to change who is recorded as the owner of this parcel — including ones filed by
-                other people.
+                Authoritative judicial workflow for land ownership transfer, khatian issuance, and AC (Land) court hearings.
               </p>
             </div>
             <Button variant="primary" onClick={() => setOpen(true)}>
@@ -97,10 +118,10 @@ export default function MutationsPanel({ parcel, onChanged }: { parcel: Parcel; 
 
         {mutations.length === 0 ? (
           <Reveal>
-            <Panel label="No applications">
+            <Panel label="No Active Applications">
               <p className="text-sm text-ink">Nobody has applied to change this record.</p>
               <p className="mt-2 text-sm text-ink-2">
-                If someone does, it appears here and you are told — before the hearing, not after.
+                If an application is submitted by any co-sharer or buyer, it appears here and SMS notice is dispatched automatically.
               </p>
             </Panel>
           </Reveal>
@@ -111,8 +132,8 @@ export default function MutationsPanel({ parcel, onChanged }: { parcel: Parcel; 
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-sm text-ink">
-                      <span className="text-ink-3">From</span> {m.applicantName}{' '}
-                      <span className="text-ink-3">to</span> {m.proposedOwner}
+                      <span className="text-ink-3">From</span> <span className="font-semibold">{m.applicantName}</span>{' '}
+                      <span className="text-ink-3">to</span> <span className="font-semibold text-indigo">{m.proposedOwner}</span>
                     </p>
                     <p className="mt-1 text-sm text-ink-2">{m.currentStage}</p>
                   </div>
@@ -127,16 +148,56 @@ export default function MutationsPanel({ parcel, onChanged }: { parcel: Parcel; 
 
                 <div className="mt-4 grid gap-x-8 gap-y-1 sm:grid-cols-2">
                   <p className="flex justify-between border-b border-line-hair py-2 text-sm">
-                    <span className="text-ink-3">Hearing</span>
-                    <span className="mono text-ink">{shortDate(m.hearingDate)}</span>
+                    <span className="text-ink-3">Judicial Hearing</span>
+                    <span className="mono text-ink">{m.hearingDate ? shortDate(m.hearingDate) : 'Pending notice'}</span>
                   </p>
                   <p className="flex justify-between border-b border-line-hair py-2 text-sm">
-                    <span className="text-ink-3">DCR fee</span>
+                    <span className="text-ink-3">DCR Fee</span>
                     <span className="mono text-ink">{taka(m.dcrAmount)}</span>
                   </p>
                 </div>
 
-                {m.remarks && <p className="mt-3 text-sm text-ink-2">{m.remarks}</p>}
+                {m.remarks && <p className="mt-3 text-sm text-ink-2 italic">{m.remarks}</p>}
+
+                {/* AC Land Officer Action Bar */}
+                {isOfficer && m.status !== 'APPROVED' && m.status !== 'REJECTED' && (
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line-hair pt-3">
+                    <span className="mono text-2xs font-semibold uppercase text-indigo">
+                      AC (Land) Judicial Actions:
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handleAdvance(m.id, 'REJECT')}
+                        disabled={actingId === m.id}
+                      >
+                        <XCircle className="h-3.5 w-3.5 text-seal" /> Reject Case
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={() => handleAdvance(m.id)}
+                        disabled={actingId === m.id}
+                      >
+                        {actingId === m.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : m.status === 'DCR_PAYMENT_PENDING' ? (
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        ) : (
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        )}
+                        {m.status === 'SUBMITTED'
+                          ? 'Assign Kanungo Survey'
+                          : m.status === 'KANUNGO_VERIFICATION'
+                          ? 'Schedule Hearing'
+                          : m.status === 'AC_LAND_HEARING'
+                          ? 'Pass Order & Issue DCR'
+                          : 'Approve & Issue Khatian'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </Panel>
             </Reveal>
           ))
@@ -145,10 +206,10 @@ export default function MutationsPanel({ parcel, onChanged }: { parcel: Parcel; 
 
       <Modal open={open} onClose={() => setOpen(false)} label={parcel.id} title="File a নামজারি" bn="নামজারির আবেদন">
         <form onSubmit={submit} className="space-y-4">
-          <Field label="Applicant name" htmlFor="an">
+          <Field label="Applicant name (আবেদনকারীর নাম)" htmlFor="an">
             <input id="an" required value={form.applicantName} onChange={set('applicantName')} className={inputClass} />
           </Field>
-          <Field label="Applicant NID" htmlFor="anid">
+          <Field label="Applicant NID (জাতীয় পরিচয়পত্র)" htmlFor="anid">
             <input
               id="anid"
               required
@@ -158,7 +219,7 @@ export default function MutationsPanel({ parcel, onChanged }: { parcel: Parcel; 
               className={`${inputClass} mono tnum`}
             />
           </Field>
-          <Field label="Mobile number" htmlFor="aph" hint="Hearing notices are sent to this number.">
+          <Field label="Mobile number (মোবাইল নম্বর)" htmlFor="aph" hint="Hearing notices are sent to this number.">
             <input
               id="aph"
               required
@@ -168,13 +229,13 @@ export default function MutationsPanel({ parcel, onChanged }: { parcel: Parcel; 
               className={`${inputClass} mono tnum`}
             />
           </Field>
-          <Field label="Record ownership to" htmlFor="po">
+          <Field label="Proposed Owner (কার নামে নামজারি হবে)" htmlFor="po">
             <input id="po" required value={form.proposedOwner} onChange={set('proposedOwner')} className={inputClass} />
           </Field>
 
           <p className="border-l-2 border-line-strong bg-ground-sunk px-3 py-2 text-xs text-ink-3">
-            The current recorded owner is told as soon as this is filed. DCR fee of {taka(1150)} is payable
-            after the hearing, not now.
+            The current recorded owner is notified as soon as this is filed. Standard government DCR fee of {taka(1150)} is payable
+            after the AC Land hearing.
           </p>
 
           <div className="flex gap-2 pt-1">
@@ -183,20 +244,20 @@ export default function MutationsPanel({ parcel, onChanged }: { parcel: Parcel; 
             </Button>
             <Button variant="primary" type="submit" className="flex-1" disabled={busy}>
               {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-              {busy ? 'Filing' : 'File application'}
+              {busy ? 'Filing' : 'File Application'}
             </Button>
           </div>
         </form>
       </Modal>
 
-      <Modal open={!!filed} onClose={() => setFiled(null)} label="Filed" title="Application received">
+      <Modal open={!!filed} onClose={() => setFiled(null)} label="Filed" title="Application Received">
         {filed && (
           <div className="space-y-4">
-            <p className="text-sm text-ink-2">Keep this case number. It is how you check the state later.</p>
-            <p className="mono border border-line bg-ground-sunk px-4 py-3 text-lg text-ink">{filed.caseNumber}</p>
+            <p className="text-sm text-ink-2">Keep this tracking case number to check the state at any stage.</p>
+            <p className="mono border border-line bg-ground-sunk px-4 py-3 text-lg font-bold text-ink">{filed.caseNumber}</p>
             <p className="text-sm text-ink-2">
-              Next: the union land office assigns it for field survey. You will be told when a hearing date is
-              set.
+              Next: The Union Land Office assigns the file for field survey. You will receive an SMS when a hearing date is
+              scheduled.
             </p>
             <Button variant="primary" className="w-full" onClick={() => setFiled(null)}>
               Done

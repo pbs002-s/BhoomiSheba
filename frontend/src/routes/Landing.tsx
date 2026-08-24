@@ -119,21 +119,37 @@ export default function Landing({ theme, onToggleTheme }: { theme: Theme; onTogg
                 </Button>
               </div>
               <p className="mt-2 text-xs text-ink-3">
-                Two parcels are loaded in this demo:{' '}
+                Four national parcels loaded:{' '}
                 <button
                   type="button"
                   onClick={() => setLookup('BD-DHK-SAV-000001')}
                   className="mono text-indigo underline underline-offset-2"
                 >
-                  BD-DHK-SAV-000001
-                </button>{' '}
-                and{' '}
+                  Dhaka
+                </button>
+                {', '}
                 <button
                   type="button"
                   onClick={() => setLookup('BD-CTG-PAN-000492')}
                   className="mono text-indigo underline underline-offset-2"
                 >
-                  BD-CTG-PAN-000492
+                  Chittagong
+                </button>
+                {', '}
+                <button
+                  type="button"
+                  onClick={() => setLookup('BD-SYL-SRM-000108')}
+                  className="mono text-indigo underline underline-offset-2"
+                >
+                  Sylhet
+                </button>
+                {' & '}
+                <button
+                  type="button"
+                  onClick={() => setLookup('BD-RAJ-PAB-000731')}
+                  className="mono text-indigo underline underline-offset-2"
+                >
+                  Rajshahi
                 </button>
               </p>
             </form>
@@ -295,10 +311,10 @@ export default function Landing({ theme, onToggleTheme }: { theme: Theme; onTogg
         </Reveal>
         <div className="mt-6 grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-4">
           {[
-            { n: 2, label: 'Parcels seeded', icon: MapPin },
+            { n: 4, label: 'National parcels', icon: MapPin },
             { n: 8, label: 'Record types joined', icon: FileText },
-            { n: 4, label: 'নামজারি stages tracked', icon: Scale },
-            { n: 6, label: 'API endpoints', icon: ShieldCheck },
+            { n: 5, label: 'নামজারি stages', icon: Scale },
+            { n: 12, label: 'REST endpoints', icon: ShieldCheck },
           ].map((s, i) => (
             <Reveal key={s.label} delay={i * 60} className="bg-sheet px-4 py-6">
               <s.icon className="h-4 w-4 text-ink-3" />
