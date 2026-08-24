@@ -9,6 +9,24 @@ export function decimals(n: number | null | undefined): string {
   return `${n.toFixed(2)} decimal`;
 }
 
+export function katha(n: number | null | undefined): string {
+  if (n === null || n === undefined) return '—';
+  const k = n / 1.65;
+  return `${k.toFixed(2)} কাঠা (${k.toFixed(2)} katha)`;
+}
+
+export function bigha(n: number | null | undefined): string {
+  if (n === null || n === undefined) return '—';
+  const b = n / 33.0;
+  return `${b.toFixed(2)} বিঘা (${b.toFixed(2)} bigha)`;
+}
+
+export function sqft(n: number | null | undefined): string {
+  if (n === null || n === undefined) return '—';
+  const s = n * 435.6;
+  return `${s.toLocaleString('en-US', { maximumFractionDigits: 1 })} sq ft`;
+}
+
 export function shortDate(iso: string | null | undefined): string {
   if (!iso) return '—';
   const d = new Date(iso);
