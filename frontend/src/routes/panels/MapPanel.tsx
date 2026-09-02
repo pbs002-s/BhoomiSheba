@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Layers, Copy, Check, Compass, Radio } from 'lucide-react';
+import { Layers, Copy, Check, Compass, Radio, MapPin, Grid } from 'lucide-react';
 import type { Parcel } from '../../lib/types';
 import ParcelPlate from '../../components/ParcelPlate';
+import LeafletMap from '../../components/LeafletMap';
 import { DataRow, Panel, StatusMark } from '../../components/ui';
 import { Reveal } from '../../components/motion';
 import { decimals, katha, sqft } from '../../lib/format';
@@ -27,6 +28,15 @@ const LAYERS: LayerOption[] = [
     description: 'High-precision RTK GNSS drone cadastral vector layer with exact boundary vertex nodes.',
   },
   {
+    id: 'sat',
+    bn: 'স্যাটেলাইট অর্থোফটো বেসম্যাপ',
+    en: 'Satellite Orthophoto',
+    meta: 'High-res aerial raster',
+    tone: 'amber',
+    mark: 'Composite',
+    description: 'Aerial satellite imagery overlay for ground physical feature comparison.',
+  },
+  {
     id: 'bs',
     bn: 'বিএস জরিপ (ডিজিটাইজড)',
     en: 'BS Survey Sheet (Vectorised)',
@@ -44,15 +54,6 @@ const LAYERS: LayerOption[] = [
     mark: 'Archived',
     description: 'Georeferenced raster sheet from the 1988 Revisional Survey.',
   },
-  {
-    id: 'sat',
-    bn: 'স্যাটেলাইট অর্থোফটো বেসম্যাপ',
-    en: 'Satellite Orthophoto',
-    meta: 'High-res aerial raster',
-    tone: 'amber',
-    mark: 'Composite',
-    description: 'Aerial satellite imagery overlay for ground physical feature comparison.',
-  },
 ];
 
 interface StationNode {
@@ -65,6 +66,7 @@ interface StationNode {
 
 export default function MapPanel({ parcel }: { parcel: Parcel }) {
   const [activeLayer, setActiveLayer] = useState<string>('bds');
+  const [viewMode, setViewMode] = useState<'leaflet' | 'plate'>('leaflet');
   const [selectedStationInfo, setSelectedStationInfo] = useState<{ label: string; lat: number; lng: number } | null>(null);
   const [copiedStation, setCopiedStation] = useState<string | null>(null);
 
@@ -108,9 +110,31 @@ export default function MapPanel({ parcel }: { parcel: Parcel }) {
           label="Cadastral Vector Map"
           meta={`মৌজা ${parcel.mouza} · দাগ ${parcel.dagNo}`}
           action={
-            <div className="flex items-center gap-1.5 text-xs text-ink-3">
-              <Compass className="h-3.5 w-3.5 text-indigo" />
-              <span>WGS84 EPSG:4326</span>
+            <div className="flex items-center gap-3">
+              <div className="flex rounded border border-line bg-sheet p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('leaflet')}
+                  className={`flex items-center gap-1 px-2 py-1 text-2xs font-semibold rounded ${
+                    viewMode === 'leaflet' ? 'bg-indigo text-white' : 'text-ink-2 hover:text-ink'
+                  }`}
+                >
+                  <MapPin className="h-3 w-3" /> Leaflet GIS
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('plate')}
+                  className={`flex items-center gap-1 px-2 py-1 text-2xs font-semibold rounded ${
+                    viewMode === 'plate' ? 'bg-indigo text-white' : 'text-ink-2 hover:text-ink'
+                  }`}
+                >
+                  <Grid className="h-3 w-3" /> Drafting Sheet
+                </button>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-ink-3">
+                <Compass className="h-3.5 w-3.5 text-indigo" />
+                <span>WGS84 EPSG:4326</span>
+              </div>
             </div>
           }
         >
@@ -125,15 +149,34 @@ export default function MapPanel({ parcel }: { parcel: Parcel }) {
             <span className="mono text-2xs text-ink-3">Click any corner node to inspect GPS</span>
           </div>
 
-          <div className="graticule -mx-1 border border-line-hair bg-sheet-raised px-2 py-2">
-            <ParcelPlate
-              dagNo={parcel.dagNo.split(/[\/ ]/)[0]}
-              areaDecimal={parcel.areaDecimal}
-              landClass={parcel.landClass}
-              mouza={parcel.mouza}
-              geojson={parcel.geojsonBoundary}
-              onStationSelect={(st: { label: string; lat: number; lng: number }) => setSelectedStationInfo({ label: st.label, lat: st.lat, lng: st.lng })}
-            />
+          <div className="overflow-hidden border border-line bg-sheet-raised">
+            {viewMode === 'leaflet' ? (
+              <LeafletMap
+                geojson={parcel.geojsonBoundary}
+                mouza={parcel.mouza}
+                dagNo={parcel.dagNo.split(/[\/ ]/)[0]}
+                activeLayer={activeLayer}
+                areaDecimal={parcel.areaDecimal}
+                landClass={parcel.landClass}
+                onStationSelect={(st) =>
+                  setSelectedStationInfo({ label: st.label, lat: st.lat, lng: st.lng })
+                }
+                className="h-[460px] w-full"
+              />
+            ) : (
+              <div className="graticule px-2 py-2">
+                <ParcelPlate
+                  dagNo={parcel.dagNo.split(/[\/ ]/)[0]}
+                  areaDecimal={parcel.areaDecimal}
+                  landClass={parcel.landClass}
+                  mouza={parcel.mouza}
+                  geojson={parcel.geojsonBoundary}
+                  onStationSelect={(st: { label: string; lat: number; lng: number }) =>
+                    setSelectedStationInfo({ label: st.label, lat: st.lat, lng: st.lng })
+                  }
+                />
+              </div>
+            )}
           </div>
 
           {/* Dynamic GPS Survey Stations Table */}
