@@ -15,6 +15,11 @@ import {
   Calculator,
   ShieldAlert,
   Github,
+  History,
+  FileCheck,
+  Lock,
+  Unlock,
+  BellRing,
 } from 'lucide-react';
 import { Link, useRouter } from '../lib/router';
 import { getParcel, getSource, listParcels, onSourceChange, readSession, writeSession } from '../lib/api';
@@ -26,15 +31,20 @@ import { useLanguage } from '../lib/language';
 import { TypedId } from '../components/motion';
 import Overview from './panels/Overview';
 import MapPanel from './panels/MapPanel';
+import LineagePanel from './panels/LineagePanel';
+import DueDiligencePanel from './panels/DueDiligencePanel';
 import TaxPanel from './panels/TaxPanel';
 import MutationsPanel from './panels/MutationsPanel';
 import ChecksPanel from './panels/ChecksPanel';
 import ServicesPanel from './panels/ServicesPanel';
+import OfficerWorkbenchPanel from './panels/OfficerWorkbenchPanel';
 import LandCalculatorModal from '../components/LandCalculatorModal';
 import DisputeModal from '../components/DisputeModal';
+import LandLockModal from '../components/LandLockModal';
+import AlertRadarModal from '../components/AlertRadarModal';
 import type { Theme } from '../lib/theme';
 
-type TabId = 'overview' | 'map' | 'tax' | 'mutations' | 'checks' | 'services';
+type TabId = 'workbench' | 'overview' | 'map' | 'lineage' | 'diligence' | 'tax' | 'mutations' | 'checks' | 'services';
 
 export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: () => void }) {
   const { navigate } = useRouter();
@@ -50,7 +60,8 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
   const [parcelId, setParcelId] = useState(initialParcel);
   const [parcel, setParcel] = useState<Parcel | null>(null);
   const [all, setAll] = useState<Parcel[]>([]);
-  const [tab, setTab] = useState<TabId>('overview');
+  const [tab, setTab] = useState<TabId>(session?.role === 'officer' ? 'workbench' : 'overview');
+
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [query, setQuery] = useState(initialParcel);
@@ -58,6 +69,8 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
   const [source, setSourceState] = useState<DataSource>(getSource());
   const [calcOpen, setCalcOpen] = useState(false);
   const [disputeOpen, setDisputeOpen] = useState(false);
+  const [lockOpen, setLockOpen] = useState(false);
+  const [radarOpen, setRadarOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<Parcel[]>([]);
   const [searchFocused, setSearchFocused] = useState(false);
 
@@ -124,9 +137,38 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
   const flags = parcel?.discrepancies?.filter((d) => !d.isResolved) ?? [];
   const isOfficer = session?.role === 'officer';
 
+  // Officer jurisdiction totals across all parcels
+  const totalOfficerMutations = useMemo(() => {
+    return all.reduce((acc, p) => {
+      const pending = (p.mutations ?? []).filter((m) => m.status !== 'APPROVED' && m.status !== 'REJECTED');
+      return acc + pending.length;
+    }, 0);
+  }, [all]);
+
+  const totalOfficerFlags = useMemo(() => {
+    return all.reduce((acc, p) => {
+      const unresolved = (p.discrepancies ?? []).filter((d) => !d.isResolved);
+      return acc + unresolved.length;
+    }, 0);
+  }, [all]);
+
+  const totalOfficerQueue = totalOfficerMutations + totalOfficerFlags;
+
   const tabs: Array<{ id: TabId; label: string; icon: typeof UserCheck; mark?: string }> = [
+    ...(isOfficer
+      ? [
+        {
+          id: 'workbench' as TabId,
+          label: t('Court Workbench', 'রাজস্ব আদালত ও কজ লিস্ট'),
+          icon: Landmark,
+          mark: totalOfficerQueue > 0 ? String(totalOfficerQueue) : undefined,
+        },
+      ]
+      : []),
     { id: 'overview', label: t('Overview', 'সারসংক্ষেপ'), icon: UserCheck },
-    { id: 'map', label: t('Map', 'নকশা'), icon: Compass },
+    { id: 'map', label: t('Map & GIS', 'নকশা ও জরিপ'), icon: Compass },
+    { id: 'lineage', label: t('Chain of Title', 'মালিকানা চেইন'), icon: History },
+    { id: 'diligence', label: t('Due Diligence', 'যাচাই সনদ'), icon: FileCheck },
     { id: 'tax', label: t('Land Tax', 'ভূমি উন্নয়ন কর'), icon: Receipt, mark: dueTax ? t('Due', 'বকেয়া') : undefined },
     {
       id: 'mutations',
@@ -180,26 +222,38 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
               </span>
             </div>
             <ul className="space-y-px">
-              {(all.length ? all : parcel ? [parcel] : []).map((p) => (
-                <li key={p.id}>
-                  <button
-                    onClick={() => openParcel(p.id)}
-                    className={cx(
-                      'w-full border-l-2 px-3 py-2 text-left transition-colors duration-1',
-                      p.id === parcelId
-                        ? 'border-indigo bg-indigo-soft'
-                        : 'border-transparent hover:border-line-strong hover:bg-ground-sunk'
-                    )}
-                  >
-                    <span className={cx('mono block text-[11px] font-medium', p.id === parcelId ? 'text-indigo' : 'text-ink-2')}>
-                      {p.id}
-                    </span>
-                    <span className="block text-xs text-ink-3">
-                      {p.upazila}, {p.district} · {formatArea(p.areaDecimal)}
-                    </span>
-                  </button>
-                </li>
-              ))}
+              {(all.length ? all : parcel ? [parcel] : []).map((p) => {
+                const pMut = (p.mutations ?? []).filter((m) => m.status !== 'APPROVED' && m.status !== 'REJECTED').length;
+                const pFlg = (p.discrepancies ?? []).filter((d) => !d.isResolved).length;
+                const pBadge = pMut + pFlg;
+                return (
+                  <li key={p.id}>
+                    <button
+                      onClick={() => openParcel(p.id)}
+                      className={cx(
+                        'w-full border-l-2 px-3 py-2 text-left transition-colors duration-1',
+                        p.id === parcelId
+                          ? 'border-indigo bg-indigo-soft'
+                          : 'border-transparent hover:border-line-strong hover:bg-ground-sunk'
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className={cx('mono block text-[11px] font-medium', p.id === parcelId ? 'text-indigo' : 'text-ink-2')}>
+                          {p.id}
+                        </span>
+                        {isOfficer && pBadge > 0 && (
+                          <span className="mono rounded bg-amber-soft px-1 text-[9px] font-bold text-amber">
+                            {pBadge} {t('act', 'কেস')}
+                          </span>
+                        )}
+                      </div>
+                      <span className="block text-xs text-ink-3">
+                        {p.upazila}, {p.district} · {formatArea(p.areaDecimal)}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
@@ -355,6 +409,28 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
             </div>
 
             <div className="ml-auto flex items-center gap-2">
+              {parcel && (
+                <Button
+                  size="sm"
+                  variant={parcel.isLocked ? 'primary' : 'secondary'}
+                  onClick={() => setLockOpen(true)}
+                  className="hidden sm:inline-flex"
+                  title="Citizen Digital Land Lock"
+                >
+                  {parcel.isLocked ? <Lock className="h-3.5 w-3.5 text-state" /> : <Unlock className="h-3.5 w-3.5" />}
+                  {parcel.isLocked ? t('Land Locked', 'ভূমি লক সক্রিয়') : t('Land Lock', 'ভূমি লক')}
+                </Button>
+              )}
+              {parcel && (
+                <button
+                  onClick={() => setRadarOpen(true)}
+                  className="flex items-center gap-1.5 rounded border border-line bg-sheet px-2.5 py-1.5 text-xs text-ink-2 hover:bg-ground-sunk"
+                  title="Citizen SMS Alert Radar"
+                >
+                  <BellRing className="h-3.5 w-3.5 text-indigo" />
+                  <span className="hidden lg:inline">{t('Radar', 'রাডার')}</span>
+                </button>
+              )}
               <Button size="sm" onClick={() => setCalcOpen(true)} className="hidden sm:inline-flex">
                 <Calculator className="h-3.5 w-3.5" /> {t('Tools', 'টুলস')}
               </Button>
@@ -368,116 +444,150 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
 
           {/* Officer Notification Banner */}
           {isOfficer && (
-            <div className="flex items-center justify-between border-t border-indigo/20 bg-indigo-soft px-4 py-1.5 text-xs text-indigo sm:px-6">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-indigo/20 bg-indigo-soft px-4 py-2 text-xs text-indigo sm:px-6">
               <div className="flex items-center gap-2">
-                <ShieldAlert className="h-3.5 w-3.5" />
+                <ShieldAlert className="h-4 w-4 shrink-0 text-indigo" />
                 <span>
-                  <span className="font-semibold">AC (Land) Judicial Session Active:</span> You can advance mutation stages & resolve cadastral discrepancy flags directly.
+                  <span className="font-semibold">AC (Land) Judicial Court Active:</span> {session?.name} &middot; {session?.office || 'Savar Revenue Circle'} &middot; {totalOfficerQueue} pending jurisdiction items.
                 </span>
               </div>
-              <span className="mono text-2xs hidden uppercase sm:inline-block">Court Mode</span>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={tab === 'workbench' ? 'primary' : 'secondary'}
+                  onClick={() => setTab('workbench')}
+                  className="h-7 text-2xs"
+                >
+                  <Scale className="h-3 w-3" />
+                  {tab === 'workbench' ? t('Viewing Cause List', 'কজ লিস্টে আছেন') : t('Open Cause List', 'দৈনিক কজ লিস্ট ও বেঞ্চ')}
+                </Button>
+                <span className="mono text-2xs hidden uppercase sm:inline-block">Executive Magistrate</span>
+              </div>
             </div>
           )}
         </header>
 
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-6">
-          {loading && (
-            <div className="border border-line bg-sheet px-5 py-16 text-center">
-              <p className="mono text-2xs uppercase text-ink-3">Reading the record...</p>
-            </div>
-          )}
-
-          {!loading && notFound && (
-            <div className="border-l-2 border-seal bg-seal-soft px-5 py-4">
-              <p className="text-sm text-seal">No parcel is recorded under that ID.</p>
-              <p className="mt-1 text-sm text-ink-2">
-                Try <button onClick={() => openParcel('BD-DHK-SAV-000001')} className="mono underline">BD-DHK-SAV-000001 (Dhaka)</button>,{' '}
-                <button onClick={() => openParcel('BD-CTG-PAN-000492')} className="mono underline">BD-CTG-PAN-000492 (Chittagong)</button>,{' '}
-                <button onClick={() => openParcel('BD-SYL-SRM-000108')} className="mono underline">BD-SYL-SRM-000108 (Sylhet)</button>, or{' '}
-                <button onClick={() => openParcel('BD-RAJ-PAB-000731')} className="mono underline">BD-RAJ-PAB-000731 (Rajshahi)</button>.
-              </p>
-            </div>
-          )}
-
-          {!loading && parcel && (
+          {tab === 'workbench' && isOfficer ? (
+            <OfficerWorkbenchPanel
+              parcels={all.length ? all : parcel ? [parcel] : []}
+              onSelectParcel={(pId) => {
+                openParcel(pId);
+                setTab('overview');
+              }}
+              onRefresh={() => {
+                listParcels().then(setAll);
+                load(parcelId);
+              }}
+            />
+          ) : (
             <>
-              {/* masthead */}
-              <div className="mb-6 border-b border-line pb-5">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <TypedId value={parcel.id} className="text-sm text-ink-2" />
-                    <h1 className="sheet-title mt-1.5 text-2xl font-semibold text-ink sm:text-3xl">
-                      {parcel.upazila}, {parcel.district}
-                    </h1>
-                    <p className="mt-1 text-sm text-ink-2">
-                      <span className="font-semibold">{pickLang(parcel.currentOwner)}</span> &middot;{' '}
-                      <span>{t(`Mouza ${parcel.mouza}`, `মৌজা ${parcel.mouza}`)}</span> &middot;{' '}
-                      <span className="mono text-xs">{t(`Plot ${parcel.dagNo}`, `দাগ ${parcel.dagNo}`)}</span>
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {dueTax ? (
-                      <StatusMark tone="seal">
-                        <AlertTriangle className="h-3 w-3" /> {taka(dueTax.totalDueBDT)} {t('due', 'বকেয়া')}
-                      </StatusMark>
-                    ) : (
-                      <StatusMark tone="state">{t('Tax clear', 'কর পরিশোধিত')}</StatusMark>
-                    )}
-                    {openMutations.length > 0 && (
-                      <StatusMark tone="amber">
-                        {openMutations.length} {t('mutation active', 'নামজারি চলমান')}
-                      </StatusMark>
-                    )}
-                    {flags.length > 0 && (
-                      <StatusMark tone="amber">
-                        {flags.length} {t('flagged', 'চিহ্নিত')}
-                      </StatusMark>
-                    )}
-                  </div>
+              {loading && (
+                <div className="border border-line bg-sheet px-5 py-16 text-center">
+                  <p className="mono text-2xs uppercase text-ink-3">Reading the record...</p>
                 </div>
+              )}
 
-                {/* key figures — a register strip */}
-                <dl className="mt-5 grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-4">
-                  {[
-                    [t('Recorded Area', 'জমির পরিমাণ'), formatArea(parcel.areaDecimal)],
-                    [t('Khatian No', 'খতিয়ান নং'), parcel.khatianNo],
-                    [t('Land Class', 'জমির শ্রেণি'), pickLang(parcel.landClass)],
-                    [t('Holding No', 'হোল্ডিং নং'), parcel.holdingNo],
-                  ].map(([k, v]) => (
-                    <div key={k} className="bg-sheet px-3.5 py-3">
-                      <dt className="mono text-2xs uppercase text-ink-3">{k}</dt>
-                      <dd className="mt-1 truncate text-[13px] text-ink" title={String(v)}>
-                        {v}
-                      </dd>
+              {!loading && notFound && (
+                <div className="border-l-2 border-seal bg-seal-soft px-5 py-4">
+                  <p className="text-sm text-seal">No parcel is recorded under that ID.</p>
+                  <p className="mt-1 text-sm text-ink-2">
+                    Try <button onClick={() => openParcel('BD-DHK-SAV-000001')} className="mono underline">BD-DHK-SAV-000001 (Dhaka)</button>,{' '}
+                    <button onClick={() => openParcel('BD-CTG-PAN-000492')} className="mono underline">BD-CTG-PAN-000492 (Chittagong)</button>,{' '}
+                    <button onClick={() => openParcel('BD-SYL-SRM-000108')} className="mono underline">BD-SYL-SRM-000108 (Sylhet)</button>, or{' '}
+                    <button onClick={() => openParcel('BD-RAJ-PAB-000731')} className="mono underline">BD-RAJ-PAB-000731 (Rajshahi)</button>.
+                  </p>
+                </div>
+              )}
+
+              {!loading && parcel && (
+                <>
+                  {/* masthead */}
+                  <div className="mb-6 border-b border-line pb-5">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div>
+                        <TypedId value={parcel.id} className="text-sm text-ink-2" />
+                        <h1 className="sheet-title mt-1.5 text-2xl font-semibold text-ink sm:text-3xl">
+                          {parcel.upazila}, {parcel.district}
+                        </h1>
+                        <p className="mt-1 text-sm text-ink-2">
+                          <span className="font-semibold">{pickLang(parcel.currentOwner)}</span> &middot;{' '}
+                          <span>{t(`Mouza ${parcel.mouza}`, `মৌজা ${parcel.mouza}`)}</span> &middot;{' '}
+                          <span className="mono text-xs">{t(`Plot ${parcel.dagNo}`, `দাগ ${parcel.dagNo}`)}</span>
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {parcel.isLocked && (
+                          <StatusMark tone="state">
+                            <Lock className="h-3 w-3" /> {t('Record Locked', 'ভূমি লক সক্রিয়')}
+                          </StatusMark>
+                        )}
+                        {dueTax ? (
+                          <StatusMark tone="seal">
+                            <AlertTriangle className="h-3 w-3" /> {taka(dueTax.totalDueBDT)} {t('due', 'বকেয়া')}
+                          </StatusMark>
+                        ) : (
+                          <StatusMark tone="state">{t('Tax clear', 'কর পরিশোধিত')}</StatusMark>
+                        )}
+                        {openMutations.length > 0 && (
+                          <StatusMark tone="amber">
+                            {openMutations.length} {t('mutation active', 'নামজারি চলমান')}
+                          </StatusMark>
+                        )}
+                        {flags.length > 0 && (
+                          <StatusMark tone="amber">
+                            {flags.length} {t('flagged', 'চিহ্নিত')}
+                          </StatusMark>
+                        )}
+                      </div>
                     </div>
-                  ))}
-                </dl>
-              </div>
 
-              {/* tabs, horizontal on small screens */}
-              <div className="mb-5 flex gap-1 overflow-x-auto border-b border-line md:hidden">
-                {tabs.map((tItem) => (
-                  <button
-                    key={tItem.id}
-                    onClick={() => setTab(tItem.id)}
-                    className={cx(
-                      '-mb-px shrink-0 border-b-2 px-3 py-2 text-[13px] transition-colors duration-1',
-                      tab === tItem.id ? 'border-ink text-ink font-semibold' : 'border-transparent text-ink-3'
-                    )}
-                  >
-                    {tItem.label}
-                  </button>
-                ))}
-              </div>
+                    {/* key figures — a register strip */}
+                    <dl className="mt-5 grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-4">
+                      {[
+                        [t('Recorded Area', 'জমির পরিমাণ'), formatArea(parcel.areaDecimal)],
+                        [t('Khatian No', 'খতিয়ান নং'), parcel.khatianNo],
+                        [t('Land Class', 'জমির শ্রেণি'), pickLang(parcel.landClass)],
+                        [t('Holding No', 'হোল্ডিং নং'), parcel.holdingNo],
+                      ].map(([k, v]) => (
+                        <div key={k} className="bg-sheet px-3.5 py-3">
+                          <dt className="mono text-2xs uppercase text-ink-3">{k}</dt>
+                          <dd className="mt-1 truncate text-[13px] text-ink" title={String(v)}>
+                            {v}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
 
-              <div key={tab} className="anim-sheet-in">
-                {tab === 'overview' && <Overview parcel={parcel} onChanged={() => load(parcelId)} />}
-                {tab === 'map' && <MapPanel parcel={parcel} />}
-                {tab === 'tax' && <TaxPanel parcel={parcel} onChanged={() => load(parcelId)} />}
-                {tab === 'mutations' && <MutationsPanel parcel={parcel} onChanged={() => load(parcelId)} />}
-                {tab === 'checks' && <ChecksPanel parcel={parcel} onChanged={() => load(parcelId)} />}
-                {tab === 'services' && <ServicesPanel parcel={parcel} />}
-              </div>
+                  {/* tabs, horizontal on small screens */}
+                  <div className="mb-5 flex gap-1 overflow-x-auto border-b border-line md:hidden">
+                    {tabs.map((tItem) => (
+                      <button
+                        key={tItem.id}
+                        onClick={() => setTab(tItem.id)}
+                        className={cx(
+                          '-mb-px shrink-0 border-b-2 px-3 py-2 text-[13px] transition-colors duration-1',
+                          tab === tItem.id ? 'border-ink text-ink font-semibold' : 'border-transparent text-ink-3'
+                        )}
+                      >
+                        {tItem.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div key={tab} className="anim-sheet-in">
+                    {tab === 'overview' && <Overview parcel={parcel} onChanged={() => load(parcelId)} />}
+                    {tab === 'map' && <MapPanel parcel={parcel} />}
+                    {tab === 'lineage' && <LineagePanel parcel={parcel} />}
+                    {tab === 'diligence' && <DueDiligencePanel parcel={parcel} />}
+                    {tab === 'tax' && <TaxPanel parcel={parcel} onChanged={() => load(parcelId)} />}
+                    {tab === 'mutations' && <MutationsPanel parcel={parcel} onChanged={() => load(parcelId)} />}
+                    {tab === 'checks' && <ChecksPanel parcel={parcel} onChanged={() => load(parcelId)} />}
+                    {tab === 'services' && <ServicesPanel parcel={parcel} />}
+                  </div>
+                </>
+              )}
             </>
           )}
         </main>
@@ -499,6 +609,22 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
           onSuccess={() => load(parcelId)}
         />
       )}
+      {parcel && (
+        <LandLockModal
+          open={lockOpen}
+          onClose={() => setLockOpen(false)}
+          parcel={parcel}
+          onSuccess={() => load(parcelId)}
+        />
+      )}
+      {parcel && (
+        <AlertRadarModal
+          open={radarOpen}
+          onClose={() => setRadarOpen(false)}
+          parcel={parcel}
+        />
+      )}
     </div>
   );
+
 }

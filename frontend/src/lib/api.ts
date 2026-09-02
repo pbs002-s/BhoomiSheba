@@ -447,3 +447,58 @@ export function writeSession(session: Session | null) {
     /* storage blocked */
   }
 }
+
+/* ---------------------------------------------------------------- due diligence & title */
+
+export async function getDueDiligence(parcelId: string): Promise<import('./types').DueDiligenceReport> {
+  try {
+    return await req<import('./types').DueDiligenceReport>(`/api/parcels/${encodeURIComponent(parcelId)}/due-diligence`);
+  } catch {
+    setSource('demo');
+    const p = findDemoParcel(parcelId) ?? demoParcels[0];
+    const { getDemoDueDiligenceReport } = await import('./demoData');
+    return getDemoDueDiligenceReport(p);
+  }
+}
+
+/* ---------------------------------------------------------------- land lock & fraud radar */
+
+export async function toggleParcelLock(parcelId: string, otp: string): Promise<{ success: boolean; isLocked: boolean }> {
+  try {
+    return await req<{ success: boolean; isLocked: boolean }>(`/api/parcels/${encodeURIComponent(parcelId)}/lock`, {
+      method: 'POST',
+      body: JSON.stringify({ otp }),
+    });
+  } catch {
+    setSource('demo');
+    const { toggleDemoParcelLock, findDemoParcel } = await import('./demoData');
+    toggleDemoParcelLock(parcelId, otp);
+    const p = findDemoParcel(parcelId);
+    return { success: true, isLocked: !!p?.isLocked };
+  }
+}
+
+export async function listSmsAlerts(): Promise<import('./types').SmsAlert[]> {
+  try {
+    return await req<import('./types').SmsAlert[]>('/api/alerts/sms');
+  } catch {
+    const { demoSmsAlerts } = await import('./demoData');
+    return [...demoSmsAlerts];
+  }
+}
+
+export async function sendSimulatedSms(alert: Partial<import('./types').SmsAlert>): Promise<import('./types').SmsAlert> {
+  const { demoSmsAlerts } = await import('./demoData');
+  const newAlert: import('./types').SmsAlert = {
+    id: `sms-${Date.now()}`,
+    recipientPhone: alert.recipientPhone || '+880 1711-223344',
+    senderId: 'BHUMISHEBA',
+    messageText: alert.messageText || 'ভূমি সেবা নোটিফিকেশন',
+    timestamp: new Date().toISOString(),
+    status: 'DELIVERED',
+    type: alert.type || 'MUTATION_ACTIVITY',
+  };
+  demoSmsAlerts.unshift(newAlert);
+  return newAlert;
+}
+

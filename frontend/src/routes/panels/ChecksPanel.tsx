@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Loader2, RefreshCw, CheckCircle2 } from 'lucide-react';
-import type { Parcel } from '../../lib/types';
+import { Loader2, RefreshCw, CheckCircle2, Scale, X } from 'lucide-react';
+import type { Parcel, Discrepancy } from '../../lib/types';
 import { runReconciliation, resolveFlag, readSession, type AuditCheck } from '../../lib/api';
-import { Button, Panel, StatusMark } from '../../components/ui';
+import { Button, Panel, StatusMark, inputClass } from '../../components/ui';
 import { Reveal } from '../../components/motion';
 import { shortDate } from '../../lib/format';
 
@@ -14,7 +14,9 @@ export default function ChecksPanel({ parcel, onChanged }: { parcel: Parcel; onC
 
   const [checks, setChecks] = useState<AuditCheck[] | null>(null);
   const [busy, setBusy] = useState(false);
-  const [resolvingId, setResolvingId] = useState<string | null>(null);
+  const [resolvingFlag, setResolvingFlag] = useState<Discrepancy | null>(null);
+  const [resolvingNote, setResolvingNote] = useState('');
+  const [submittingResolution, setSubmittingResolution] = useState(false);
   const [ranAt, setRanAt] = useState<string | null>(null);
   const flags = parcel.discrepancies?.filter((d) => !d.isResolved) ?? [];
 
@@ -26,12 +28,21 @@ export default function ChecksPanel({ parcel, onChanged }: { parcel: Parcel; onC
     setBusy(false);
   };
 
-  const handleResolve = async (flagId: string) => {
-    setResolvingId(flagId);
-    await resolveFlag(flagId, parcel.id, 'Cleared after AC Land field survey inspection.');
-    setResolvingId(null);
+  const handleOpenResolve = (flag: Discrepancy) => {
+    setResolvingFlag(flag);
+    setResolvingNote('সরেজমিন পরিমাপ ও ড্রোন জরিপ অনুযায়ী রাজস্ব আদালতে গরমিল নিষ্পত্তি করা হলো।');
+  };
+
+  const handleConfirmResolve = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resolvingFlag) return;
+    setSubmittingResolution(true);
+    await resolveFlag(resolvingFlag.id, parcel.id, resolvingNote);
+    setSubmittingResolution(false);
+    setResolvingFlag(null);
     if (onChanged) onChanged();
   };
+
 
   return (
     <div className="grid gap-5 xl:grid-cols-[1.2fr_1fr]">
@@ -126,10 +137,9 @@ export default function ChecksPanel({ parcel, onChanged }: { parcel: Parcel; onC
                       <Button
                         size="sm"
                         variant="secondary"
-                        onClick={() => handleResolve(d.id)}
-                        disabled={resolvingId === d.id}
+                        onClick={() => handleOpenResolve(d)}
                       >
-                        {resolvingId === d.id ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Resolve Flag'}
+                        <Scale className="h-3 w-3" /> Resolve Flag
                       </Button>
                     )}
                   </div>
@@ -139,6 +149,57 @@ export default function ChecksPanel({ parcel, onChanged }: { parcel: Parcel; onC
           )}
         </Panel>
       </Reveal>
+
+      {/* Discrepancy Resolution Modal */}
+      {resolvingFlag && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 backdrop-blur-sm">
+          <div className="relative w-full max-w-md border border-line bg-sheet p-6 shadow-xl animate-sheet-in">
+            <div className="flex items-center justify-between border-b border-line pb-3">
+              <div className="flex items-center gap-2 text-indigo">
+                <Scale className="h-5 w-5" />
+                <h3 className="sheet-title text-base font-semibold text-ink">
+                  বিরোধ ও গরমিল নিষ্পত্তি আদেশ
+                </h3>
+              </div>
+              <button onClick={() => setResolvingFlag(null)} className="text-ink-3 hover:text-ink">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmResolve} className="mt-4 space-y-4 text-xs">
+              <div className="bg-ground-sunk p-3 rounded border border-line">
+                <p className="font-semibold text-ink">{resolvingFlag.mismatchType}</p>
+                <p className="text-2xs text-ink-3 mt-1">
+                  Source A: {resolvingFlag.sourceA} &middot; Source B: {resolvingFlag.sourceB}
+                </p>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-ink mb-1">
+                  সহকারী কমিশনার (ভূমি) এর নিষ্পত্তিমূলক আদেশ (Resolution Finding):
+                </label>
+                <textarea
+                  rows={3}
+                  value={resolvingNote}
+                  onChange={(e) => setResolvingNote(e.target.value)}
+                  className={`${inputClass} w-full font-sans`}
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-line">
+                <Button size="sm" type="button" onClick={() => setResolvingFlag(null)}>
+                  বাতিল (Cancel)
+                </Button>
+                <Button size="sm" variant="primary" type="submit" disabled={submittingResolution}>
+                  {submittingResolution ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                  নিষ্পত্তি কার্যকর করুন
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
