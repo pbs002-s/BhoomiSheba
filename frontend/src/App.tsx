@@ -1,6 +1,7 @@
 import SurveyField from './components/SurveyField';
 import { RouterProvider, useRouter } from './lib/router';
 import { useTheme } from './lib/theme';
+import { LanguageProvider } from './lib/language';
 import Landing from './routes/Landing';
 import SignIn from './routes/SignIn';
 import Dashboard from './routes/Dashboard';
@@ -26,8 +27,10 @@ function Routes() {
 
 export default function App() {
   return (
-    <RouterProvider>
-      <Routes />
-    </RouterProvider>
+    <LanguageProvider>
+      <RouterProvider>
+        <Routes />
+      </RouterProvider>
+    </LanguageProvider>
   );
 }

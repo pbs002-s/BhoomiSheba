@@ -109,8 +109,14 @@ export function DataRow({
   return (
     <div className="flex items-baseline justify-between gap-4 border-b border-line-hair py-2.5 last:border-0">
       <span className="shrink-0 text-sm text-ink-3">
-        {label}
-        {bn && <span className="bn ml-1.5 text-xs text-ink-3/80">{bn}</span>}
+        {bn ? (
+          <>
+            <span className="lang-en">{label}</span>
+            <span className="lang-bn">{bn}</span>
+          </>
+        ) : (
+          label
+        )}
       </span>
       <span className={cx('text-right text-sm text-ink', mono && 'mono tnum text-[13px]')}>{value}</span>
     </div>
@@ -168,6 +174,33 @@ export function ThemeToggle({
       )}
     >
       {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </button>
+  );
+}
+
+/* ----------------------------------------------------- LanguageToggle --- */
+export function LanguageToggle({
+  lang,
+  onToggle,
+  className,
+}: {
+  lang: 'en' | 'bn';
+  onToggle: () => void;
+  className?: string;
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      aria-label={lang === 'bn' ? 'Switch to English' : 'বাংলায় দেখুন'}
+      title={lang === 'bn' ? 'Switch to English' : 'বাংলায় দেখুন'}
+      className={cx(
+        'inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-sheet-raised px-2.5 text-xs font-semibold text-ink-2 transition-colors duration-1 hover:border-indigo hover:text-indigo',
+        className
+      )}
+    >
+      <span className={cx('text-[13px]', lang === 'bn' ? 'font-bold text-indigo' : 'text-ink-3')}>বাং</span>
+      <span className="text-ink-3">/</span>
+      <span className={cx('font-mono text-[11px]', lang === 'en' ? 'font-bold text-indigo' : 'text-ink-3')}>EN</span>
     </button>
   );
 }
