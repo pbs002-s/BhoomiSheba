@@ -12,11 +12,13 @@ interface Props {
   initialDecimal?: number;
 }
 
-type TabType = 'convert' | 'faraez' | 'tax';
+type TabType = 'convert' | 'faraez' | 'kharij' | 'tax';
 
 export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.5 }: Props) {
   const { lang, t, pickLang } = useLanguage();
   const [tab, setTab] = useState<TabType>('convert');
+  const [draftedMutation, setDraftedMutation] = useState<string | null>(null);
+
 
   // Conversion State
   const [val, setVal] = useState<number>(initialDecimal);
@@ -83,10 +85,11 @@ export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.
     >
       <div className="space-y-5">
         {/* Sub-navigation tabs */}
-        <div className="grid grid-cols-3 gap-px border border-line bg-line">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px border border-line bg-line">
           {[
             { id: 'convert' as const, en: 'Unit Converter', bn: 'পরিমাপ রূপান্তর' },
             { id: 'faraez' as const, en: 'Faraez Inheritance', bn: 'ফারায়েজ বণ্টন' },
+            { id: 'kharij' as const, en: 'Kharij Partition', bn: 'জমা ভাগ ও খারিজ নকশা' },
             { id: 'tax' as const, en: 'Tax Estimator', bn: 'কর হিসাব' },
           ].map((t) => (
             <button
@@ -277,7 +280,155 @@ export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.
           </div>
         )}
 
-        {/* Tab 3: Tax Estimator */}
+        {/* Tab 3: Kharij & Partition Simulator */}
+        {tab === 'kharij' && (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3">
+              <div>
+                <h4 className="text-sm font-semibold text-ink">
+                  {t('Automated Kharij Partition & Subdivision', 'স্বয়ংক্রিয় জমা খারিজ ও দাগ বিভাজন নকশা')}
+                </h4>
+                <p className="text-xs text-ink-2">
+                  ফারায়েজ বণ্টনের ভিত্তিতে মূল দাগকে উপ-দাগে (বাটা দাগ) বিভক্ত করে ডিজিটাল নামজারি খসড়া প্রস্তুত।
+                </p>
+              </div>
+              <span className="mono text-xs font-semibold text-indigo">
+                মূল দাগ ১২০৪ &middot; মোট জমি: {fArea || initialDecimal} শতক
+              </span>
+            </div>
+
+            {/* Visual Cadastral Partition Canvas (SVG) */}
+            <div className="border border-line bg-sheet-raised p-4">
+              <span className="mono block text-2xs uppercase text-ink-3 mb-2">
+                প্রস্তাবিত উপ-দাগের ভৌগোলিক নকশা (Simulated Cadastral Subdivision)
+              </span>
+              <div className="relative h-44 w-full rounded border border-line bg-ground-sunk overflow-hidden flex items-center justify-center p-2">
+                <svg viewBox="0 0 600 160" className="h-full w-full">
+                  <defs>
+                    <pattern id="gridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+                      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-line-hair" />
+                    </pattern>
+                  </defs>
+                  <rect width="600" height="160" fill="url(#gridPattern)" />
+
+                  {/* Subdivision polygon blocks */}
+                  {/* Block 1: Wife 12.5% */}
+                  <polygon
+                    points="30,20 120,20 100,140 30,140"
+                    fill="#116149"
+                    fillOpacity="0.25"
+                    stroke="#116149"
+                    strokeWidth="1.5"
+                  />
+                  <text x="50" y="75" fill="#116149" fontSize="12" fontWeight="bold" fontFamily="sans-serif">
+                    দাগ ১২০৪/১
+                  </text>
+                  <text x="50" y="95" fill="#116149" fontSize="10" fontFamily="sans-serif">
+                    স্ত্রী (০.৬৯ শতক)
+                  </text>
+
+                  {/* Block 2: Son 1 43.75% */}
+                  <polygon
+                    points="120,20 350,20 330,140 100,140"
+                    fill="#22456e"
+                    fillOpacity="0.25"
+                    stroke="#22456e"
+                    strokeWidth="1.5"
+                  />
+                  <text x="180" y="75" fill="#22456e" fontSize="12" fontWeight="bold" fontFamily="sans-serif">
+                    দাগ ১২০৪/২ (পুত্র ১)
+                  </text>
+                  <text x="180" y="95" fill="#22456e" fontSize="10" fontFamily="sans-serif">
+                    ২.৪১ শতক (৪৩.৭৫%)
+                  </text>
+
+                  {/* Block 3: Son 2 43.75% */}
+                  <polygon
+                    points="350,20 570,20 570,140 330,140"
+                    fill="#86adda"
+                    fillOpacity="0.3"
+                    stroke="#22456e"
+                    strokeWidth="1.5"
+                  />
+                  <text x="410" y="75" fill="#22456e" fontSize="12" fontWeight="bold" fontFamily="sans-serif">
+                    দাগ ১২০৪/৩ (পুত্র ২)
+                  </text>
+                  <text x="410" y="95" fill="#22456e" fontSize="10" fontFamily="sans-serif">
+                    ২.৪১ শতক (৪৩.৭৫%)
+                  </text>
+
+                  {/* Survey Station Pins */}
+                  <circle cx="30" cy="20" r="3" fill="#a8322a" />
+                  <circle cx="570" cy="20" r="3" fill="#a8322a" />
+                  <circle cx="570" cy="140" r="3" fill="#a8322a" />
+                  <circle cx="30" cy="140" r="3" fill="#a8322a" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Proposed Kharij Holdings Register */}
+            <div className="border border-line bg-sheet p-4 space-y-2">
+              <span className="mono block text-2xs uppercase text-ink-3">
+                খতিয়ান ও হোল্ডিং বিভাজন প্রস্তাবনা (Proposed Separate Holdings)
+              </span>
+              <div className="grid gap-2 sm:grid-cols-3 text-xs">
+                <div className="rounded border border-line bg-sheet-raised p-2.5">
+                  <span className="mono font-bold text-state">প্রস্তাবিত দাগ ১২০৪/১</span>
+                  <p className="mt-1 text-ink font-semibold">ওয়ারিশ: স্ত্রী</p>
+                  <p className="mono text-2xs text-ink-2">হিস্যা: ০.৬৯ শতক (০.৪২ কাঠা)</p>
+                  <span className="mt-1 inline-block text-[10px] text-state">স্বতন্ত্র হোল্ডিং প্রস্তুত</span>
+                </div>
+                <div className="rounded border border-line bg-sheet-raised p-2.5">
+                  <span className="mono font-bold text-indigo">প্রস্তাবিত দাগ ১২০৪/২</span>
+                  <p className="mt-1 text-ink font-semibold">ওয়ারিশ: জ্যেষ্ঠ পুত্র</p>
+                  <p className="mono text-2xs text-ink-2">হিস্যা: ২.৪১ শতক (১.৪৬ কাঠা)</p>
+                  <span className="mt-1 inline-block text-[10px] text-indigo">স্বতন্ত্র হোল্ডিং প্রস্তুত</span>
+                </div>
+                <div className="rounded border border-line bg-sheet-raised p-2.5">
+                  <span className="mono font-bold text-indigo">প্রস্তাবিত দাগ ১২০৪/৩</span>
+                  <p className="mt-1 text-ink font-semibold">ওয়ারিশ: কনিষ্ঠ পুত্র</p>
+                  <p className="mono text-2xs text-ink-2">হিস্যা: ২.৪১ শতক (১.৪৬ কাঠা)</p>
+                  <span className="mt-1 inline-block text-[10px] text-indigo">স্বতন্ত্র হোল্ডিং প্রস্তুত</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 1-Click e-Mutation Action */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border border-indigo/20 bg-indigo-soft p-4">
+              <div>
+                <span className="text-xs font-semibold text-indigo block">
+                  অনলাইন ই-নামজারি খারিজ আবেদন (1-Click e-Mutation Kharij)
+                </span>
+                <p className="text-2xs text-ink-2 mt-0.5">
+                  উক্ত ফারায়েজ ও বাটা দাগের ভিত্তিতে এসিল্যান্ড আদালতে তাৎক্ষণিক খারিজ কেস রেজিস্ট্রি করুন।
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={() => {
+                  setDraftedMutation(`MUT-KHARIJ-${Math.floor(1000 + Math.random() * 9000)}-2026`);
+                }}
+              >
+                ই-নামজারি আবেদন ড্রাফট করুন
+              </Button>
+            </div>
+
+            {draftedMutation && (
+              <div className="rounded border border-state/40 bg-state-soft p-3.5 text-xs text-state">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold">✓ আবেদন ড্রাফট সফল হয়েছে: </span>
+                  <span className="mono font-bold">{draftedMutation}</span>
+                </div>
+                <p className="mt-1 text-2xs text-ink-2">
+                  আইনি ডিসিআর ফি: ১,১৫০ টাকা। সহকারী কমিশনার (ভূমি) এর বিচারিক ট্র্যাকিং প্যানেলে নথিটি সংযুক্ত হয়েছে।
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 4: Tax Estimator */}
         {tab === 'tax' && (
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">

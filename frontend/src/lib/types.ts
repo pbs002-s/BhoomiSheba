@@ -121,6 +121,80 @@ export interface Parcel {
   discrepancies?: Discrepancy[];
   documents?: LandDocument[];
   complaints?: Complaint[];
+  isLocked?: boolean;
+  lockedAt?: string;
+  lockedReason?: string;
+  titleChain?: TitleChainNode[];
+  adjacentParcels?: AdjacentParcel[];
+}
+
+export type PropertyState = 'CURRENT' | 'HISTORICAL' | 'PENDING';
+
+export interface TitleChainNode {
+  id: string;
+  epoch: 'CS' | 'SA' | 'RS' | 'BS' | 'BDS';
+  epochTitle: string;
+  year: number | string;
+  ownerName: string;
+  khatianNo: string;
+  dagNo: string;
+  areaDecimal: number;
+  transferType: 'ORIGINAL_SETTLEMENT' | 'INHERITANCE' | 'PURCHASE_DEED' | 'E_MUTATION';
+  transferTypeBn: string;
+  deedNo?: string;
+  subRegistryOffice?: string;
+  state: PropertyState;
+  notes?: string;
+}
+
+export interface AdjacentParcel {
+  dagNo: string;
+  mouza: string;
+  owner: string;
+  areaDecimal: number;
+  landClass: string;
+  encroachmentStatus: 'NORMAL' | 'VARIANCE_FLAG' | 'CLEAR';
+  overlapDiffSqFt?: number;
+}
+
+export interface DueDiligenceItem {
+  id: string;
+  name: string;
+  nameBn: string;
+  status: 'PASS' | 'WARNING' | 'FAIL';
+  finding: string;
+  detail: string;
+  statuteRef: string;
+}
+
+export interface DueDiligenceReport {
+  parcelId: string;
+  score: number; // 0 to 100
+  overallVerdict: 'APPROVED_FOR_TRANSACTION' | 'CAUTION_REQUIRED' | 'DISPUTED_RESTRICTED';
+  generatedAt: string;
+  verificationHash: string;
+  qrCodeData: string;
+  items: DueDiligenceItem[];
+}
+
+export interface SmsAlert {
+  id: string;
+  recipientPhone: string;
+  senderId: string;
+  messageText: string;
+  timestamp: string;
+  status: 'DELIVERED' | 'QUEUED';
+  type: 'LAND_LOCK' | 'MUTATION_ACTIVITY' | 'TAX_PAYMENT' | 'DISPUTE_FILED';
+}
+
+export interface KharijPartitionShare {
+  applicantName: string;
+  relation: string;
+  fraction: string;
+  allocatedDecimal: number;
+  proposedDagNo: string;
+  color: string;
+  percentage: number;
 }
 
 export type Role = 'citizen' | 'officer';
@@ -162,3 +236,4 @@ export interface FaraezShare {
   perPersonDecimal: number;
   percentage: number;
 }
+

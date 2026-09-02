@@ -1,4 +1,4 @@
-import type { Parcel } from './types';
+import type { Parcel, SmsAlert, DueDiligenceReport } from './types';
 
 /**
  * Offline dataset mirroring `backend/prisma/seed.ts`.
@@ -194,6 +194,108 @@ const savar: Parcel = {
       createdAt: '2026-07-10T08:00:00.000Z',
     },
   ],
+  isLocked: false,
+  titleChain: [
+    {
+      id: 'tc-cs',
+      epoch: 'CS',
+      epochTitle: 'Cadastral Survey (সিএস জরিপ)',
+      year: 1924,
+      ownerName: 'হরেন্দ্র নারায়ণ সেন চৌধুরী (Harendra Narayan Sen Chowdhury)',
+      khatianNo: 'CS-412',
+      dagNo: '910 (Original Estate)',
+      areaDecimal: 28.5,
+      transferType: 'ORIGINAL_SETTLEMENT',
+      transferTypeBn: 'জমিদারী মূল বন্দোবস্ত',
+      subRegistryOffice: 'ঢাকা কালেক্টরেট',
+      state: 'HISTORICAL',
+      notes: 'Bengal Cadastral Survey record under Savar Revenue Circle.',
+    },
+    {
+      id: 'tc-sa',
+      epoch: 'SA',
+      epochTitle: 'State Acquisition (এসএ জরিপ)',
+      year: 1958,
+      ownerName: 'মোঃ আফতাব উদ্দিন আহমেদ (Md. Aftab Uddin Ahmed)',
+      khatianNo: 'SA-890',
+      dagNo: '1042 (বিভাজিত)',
+      areaDecimal: 12.0,
+      transferType: 'PURCHASE_DEED',
+      transferTypeBn: 'সাফ-কবলা দলিল',
+      deedNo: 'দলিল নং ১২৩০/১৯৫৮',
+      subRegistryOffice: 'ধামরাই সাব-রেজিস্ট্রি অফিস',
+      state: 'HISTORICAL',
+      notes: 'Transferred via registered purchase deed post East Bengal State Acquisition Act.',
+    },
+    {
+      id: 'tc-rs',
+      epoch: 'RS',
+      epochTitle: 'Revisional Survey (আরএস জরিপ)',
+      year: 1984,
+      ownerName: 'মোঃ সিরাজুল হক (Md. Sirajul Haque)',
+      khatianNo: 'RS-4502',
+      dagNo: '1204',
+      areaDecimal: 5.5,
+      transferType: 'INHERITANCE',
+      transferTypeBn: 'উত্তরাধিকার ও হেবা বিল এওয়াজ',
+      deedNo: 'হেবা দলিল ৩৪০২/১৯৮৩',
+      subRegistryOffice: 'সাভার সাব-রেজিস্ট্রি অফিস',
+      state: 'HISTORICAL',
+      notes: 'RS field survey sheet confirms creation of independent Dag 1204.',
+    },
+    {
+      id: 'tc-bs',
+      epoch: 'BS',
+      epochTitle: 'Bangladesh Survey (বিএস মহানগর জরিপ)',
+      year: 2018,
+      ownerName: 'মোঃ রফিকুল ইসলাম (Md. Rafiqul Islam)',
+      khatianNo: 'BS-1890',
+      dagNo: '1204',
+      areaDecimal: 5.5,
+      transferType: 'PURCHASE_DEED',
+      transferTypeBn: 'সাব-কবলা দলিল',
+      deedNo: 'দলিল নং ৪৪৭১/২০১৮',
+      subRegistryOffice: 'সাভার সাব-রেজিস্ট্রি অফিস',
+      state: 'HISTORICAL',
+      notes: 'Biometric deed registration with cleared consideration and non-encumbrance receipt.',
+    },
+    {
+      id: 'tc-bds',
+      epoch: 'BDS',
+      epochTitle: 'BDS Digital Drone Cadastre (বিডিএস ডিজিটাল ড্রোন জরিপ)',
+      year: 2026,
+      ownerName: 'মোঃ রফিকুল ইসলাম (Md. Rafiqul Islam)',
+      khatianNo: 'BS-1890 / BDS-SAV-001',
+      dagNo: '1204',
+      areaDecimal: 5.5,
+      transferType: 'E_MUTATION',
+      transferTypeBn: 'অনলাইন ই-নামজারি ও নকশা অনুমোদন',
+      deedNo: 'নামজারি কেস MUT-2026-DH-0941',
+      subRegistryOffice: 'সহকারী কমিশনার (ভূমি) কোর্ট, সাভার',
+      state: 'CURRENT',
+      notes: 'Active authoritative legal title with RTK-GNSS vector polygon in national land cloud.',
+    },
+  ],
+  adjacentParcels: [
+    {
+      dagNo: '1203',
+      mouza: 'Tetuljhora',
+      owner: 'মোঃ আব্দুল করিম (Abdul Karim)',
+      areaDecimal: 6.2,
+      landClass: 'বাস্তুভিটা',
+      encroachmentStatus: 'VARIANCE_FLAG',
+      overlapDiffSqFt: 87.12, // 0.02 decimal
+    },
+    {
+      dagNo: '1205',
+      mouza: 'Tetuljhora',
+      owner: 'বেগম রওশন আরা (Rowshan Ara)',
+      areaDecimal: 11.4,
+      landClass: 'নাল জমি',
+      encroachmentStatus: 'CLEAR',
+      overlapDiffSqFt: 0,
+    },
+  ],
 };
 
 const patiya: Parcel = {
@@ -339,7 +441,22 @@ const sreemangal: Parcel = {
       paymentDate: null,
     },
   ],
-  mutations: [],
+  mutations: [
+    {
+      id: 'm-syl-1',
+      caseNumber: 'MUT-2026-SYL-0519',
+      applicantName: 'Tariqul Islam (Buyer)',
+      applicantNid: '19875819203948571',
+      applicantPhone: '+880 1712-998877',
+      proposedOwner: 'Tariqul Islam',
+      status: 'AC_LAND_HEARING',
+      currentStage: 'Stage 3: Spot Survey Verified. AC Land Hearing Scheduled',
+      hearingDate: new Date(Date.now() + 2 * 86_400_000).toISOString(),
+      dcrAmount: 1150,
+      remarks: 'Notice served to recorded tea estate co-sharers. Hearing on cause list.',
+      createdAt: '2026-08-12T05:30:00.000Z',
+    },
+  ],
   timelineEvents: [
     {
       id: 'e6',
@@ -430,7 +547,18 @@ const pabna: Parcel = {
       eventDate: '2026-06-01T10:00:00.000Z',
     },
   ],
-  discrepancies: [],
+  discrepancies: [
+    {
+      id: 'd-pab-1',
+      mismatchType: 'Biometric deed signature unlinked to national NID database',
+      sourceA: 'Sub-Registry Deed Book Vol 42/2021',
+      sourceB: 'Election Commission NID Biometric API',
+      severity: 'HIGH',
+      isResolved: false,
+      flaggedBy: 'automated registry audit',
+      createdAt: '2026-07-15T08:00:00.000Z',
+    },
+  ],
   documents: [
     {
       id: 'doc6',
@@ -476,3 +604,139 @@ export const demoAccounts = [
     note: 'AC Land workbench: review queue, hearing notices, approval & flag resolution.',
   },
 ];
+
+export const demoSmsAlerts: SmsAlert[] = [
+  {
+    id: 'sms-1',
+    recipientPhone: '+880 1711-223344',
+    senderId: 'BHUMISHEBA',
+    messageText: 'ভূমি সেবা: আপনার খতিয়ান RS-4502 (দাগ ১২০৪) এর ভূমি উন্নয়ন কর বাৎসরিক ডিমান্ড প্রস্তুত হয়েছে। বিস্তারিত: land.gov.bd',
+    timestamp: '2026-08-14T09:12:00.000Z',
+    status: 'DELIVERED',
+    type: 'TAX_PAYMENT',
+  },
+  {
+    id: 'sms-2',
+    recipientPhone: '+880 1711-223344',
+    senderId: 'BHUMISHEBA',
+    messageText: 'ভূমি সেবা নিরাপত্তা: খতিয়ান BD-DHK-SAV-000001 এর উপর একটি অডিট ও ডিসক্রেপ্যান্সি যাচাই সম্পন্ন হয়েছে।',
+    timestamp: '2026-08-20T14:30:00.000Z',
+    status: 'DELIVERED',
+    type: 'MUTATION_ACTIVITY',
+  },
+];
+
+export function getDemoDueDiligenceReport(parcel: Parcel): import('./types').DueDiligenceReport {
+  const dueTax = parcel.taxRecords?.find((t) => t.status === 'PENDING');
+  const hasFlags = (parcel.discrepancies?.filter((d) => !d.isResolved).length ?? 0) > 0;
+  const areaDiff = parcel.mappedAreaDecimal ? Math.abs(parcel.mappedAreaDecimal - parcel.areaDecimal) : 0;
+  
+  let score = 95;
+  if (dueTax) score -= 12;
+  if (hasFlags) score -= 8;
+  if (areaDiff > 0.05) score -= 15;
+  if (parcel.isLocked) score += 5; // Land Lock adds security score
+
+  const items: import('./types').DueDiligenceItem[] = [
+    {
+      id: 'dd-title',
+      name: 'Ownership & Khatian Identity',
+      nameBn: 'মালিকানা ও খতিয়ান মিল',
+      status: 'PASS',
+      finding: '100% Match with National Sub-Registry and e-Parcha record.',
+      detail: `Owner "${parcel.currentOwner}" matches registered NID ${parcel.nidNumber}. Khatian ${parcel.khatianNo} is active and certified.`,
+      statuteRef: 'State Acquisition and Tenancy Act 1950, Sec 143',
+    },
+    {
+      id: 'dd-spatial',
+      name: 'Cadastral Boundary & PostGIS Verification',
+      nameBn: 'ভৌগোলিক সীমানা ও ডিজিটাল ড্রোন নকশা',
+      status: areaDiff <= 0.05 ? 'PASS' : 'WARNING',
+      finding: areaDiff <= 0.05 
+        ? `Variance ${areaDiff.toFixed(2)} decimal is within statutory tolerance (≤ 0.05 dec).`
+        : `Area discrepancy of ${areaDiff.toFixed(2)} decimal flagged between deed and polygon.`,
+      detail: `Deed area: ${parcel.areaDecimal} dec; BDS digitized polygon: ${parcel.mappedAreaDecimal || parcel.areaDecimal} dec.`,
+      statuteRef: 'Survey Act 1875 & DLRS Cadastral Standard 2024',
+    },
+    {
+      id: 'dd-tax',
+      name: 'Land Development Tax Clearance',
+      nameBn: 'ভূমি উন্নয়ন কর হালনাগাদ দাখিলা',
+      status: dueTax ? 'WARNING' : 'PASS',
+      finding: dueTax ? `Unsettled tax demand for fiscal year ${dueTax.fiscalYear} (BDT ${dueTax.totalDueBDT}).` : 'All fiscal years paid up to date.',
+      detail: dueTax ? 'Requires clearance of pending assessment prior to deed execution.' : 'No arrear liability detected.',
+      statuteRef: 'Land Development Tax Ordinance 1976',
+    },
+    {
+      id: 'dd-court',
+      name: 'Litigation & Revenue Caveats',
+      nameBn: 'আদালত ও দেওয়ানী মামলা যাচাই',
+      status: 'PASS',
+      finding: 'No active stay order, Section 144 injunction, or vesting notice found.',
+      detail: 'Clean civil title. No pending lis pendens registered at Savar Senior Assistant Judge Court.',
+      statuteRef: 'Civil Procedure Code, 1908 (Order XXXIX)',
+    },
+    {
+      id: 'dd-mortgage',
+      name: 'Bank Mortgage & Charge Freedom',
+      nameBn: 'ব্যাংক দায় ও বন্ধকমুক্ত সনদ',
+      status: 'PASS',
+      finding: 'No registered equitable mortgage or institutional charge in CIB/Sub-Registry.',
+      detail: 'Original deeds are unencumbered; no tripartite banking lien recorded.',
+      statuteRef: 'Transfer of Property Act 1882, Sec 58',
+    },
+    {
+      id: 'dd-class',
+      name: 'Land Classification & Environmental Zoning',
+      nameBn: 'জমির শ্রেণি ও পরিবেশগত ছাড়পত্র',
+      status: 'PASS',
+      finding: `Classified as "${parcel.landClass}". Complies with local upazila master plan.`,
+      detail: 'Not classified as protected wetland (জলাশয়), government khas, or vested property.',
+      statuteRef: 'Natural Water Reservoir Protection Act 2000',
+    },
+    {
+      id: 'dd-mutation',
+      name: 'e-Mutation Transfer Eligibility',
+      nameBn: 'ই-নামজারি খারিজ যোগ্যতা ইনডেক্স',
+      status: 'PASS',
+      finding: 'Fully eligible for instantaneous digital mutation upon registration.',
+      detail: 'Bifurcation holding chain verified down to RS parent dag 1204.',
+      statuteRef: 'Ministry of Land Mutation Circular 2021',
+    },
+  ];
+
+  const verdict = score >= 80 ? 'APPROVED_FOR_TRANSACTION' : score >= 60 ? 'CAUTION_REQUIRED' : 'DISPUTED_RESTRICTED';
+
+  return {
+    parcelId: parcel.id,
+    score: Math.min(100, Math.max(10, score)),
+    overallVerdict: verdict,
+    generatedAt: new Date().toISOString(),
+    verificationHash: `BD-DLRS-AUTH-${Math.random().toString(16).substring(2, 10).toUpperCase()}-2026`,
+    qrCodeData: `https://land.gov.bd/verify/clearance?upid=${encodeURIComponent(parcel.id)}&hash=${Math.random().toString(16).substring(2, 8)}`,
+    items,
+  };
+}
+
+export function toggleDemoParcelLock(parcelId: string, pin: string): boolean {
+  const p = findDemoParcel(parcelId);
+  if (!p) return false;
+  p.isLocked = !p.isLocked;
+  p.lockedAt = p.isLocked ? new Date().toISOString() : undefined;
+  p.lockedReason = p.isLocked ? 'Citizen Digital Lock Activated by Owner via biometric NID OTP' : undefined;
+  
+  // Add SMS Alert to radar
+  demoSmsAlerts.unshift({
+    id: `sms-${Date.now()}`,
+    recipientPhone: p.phone,
+    senderId: 'BHUMISHEBA',
+    messageText: p.isLocked 
+      ? `ভূমি সেবা নিরাপত্তা: আপনার খতিয়ান ${p.khatianNo} এ 'ভূমি লক' সক্রিয় হয়েছে। সাব-রেজিস্ট্রি বা নামজারি আবেদন সাময়িক স্থগিত থাকবে।`
+      : `ভূমি সেবা নিরাপত্তা: আপনার খতিয়ান ${p.khatianNo} এর 'ভূমি লক' নিষ্ক্রিয় করা হয়েছে। স্বাভাবিক লেনদেন অনুমোদিত।`,
+    timestamp: new Date().toISOString(),
+    status: 'DELIVERED',
+    type: 'LAND_LOCK',
+  });
+  return true;
+}
+
