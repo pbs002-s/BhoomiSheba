@@ -4,6 +4,7 @@ import { Button, Field, inputClass, DataRow } from './ui';
 import { convertLandUnits, calculateFaraez } from '../lib/api';
 import type { LandUnits, FaraezShare } from '../lib/types';
 import { taka } from '../lib/format';
+import { useLanguage } from '../lib/language';
 
 interface Props {
   open: boolean;
@@ -14,6 +15,7 @@ interface Props {
 type TabType = 'convert' | 'faraez' | 'tax';
 
 export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.5 }: Props) {
+  const { lang, t, pickLang } = useLanguage();
   const [tab, setTab] = useState<TabType>('convert');
 
   // Conversion State
@@ -105,7 +107,7 @@ export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.
         {tab === 'convert' && (
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Input Value (পরিমাণ)" htmlFor="cval">
+              <Field label={t('Input Value', 'পরিমাপের মান')} htmlFor="cval">
                 <input
                   id="cval"
                   type="number"
@@ -115,33 +117,35 @@ export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.
                   className={`${inputClass} mono tnum`}
                 />
               </Field>
-              <Field label="From Unit (একক)" htmlFor="cunit">
+              <Field label={t('From Unit', 'বর্তমান একক')} htmlFor="cunit">
                 <select
                   id="cunit"
                   value={unit}
                   onChange={(e) => setUnit(e.target.value as any)}
                   className={inputClass}
                 >
-                  <option value="decimal">শতক / ডেসিমেল (Decimal)</option>
-                  <option value="katha">কাঠা (Katha — 1.65 Dec)</option>
-                  <option value="bigha">বিঘা (Bigha — 33 Dec / 20 Katha)</option>
-                  <option value="acre">একর (Acre — 100 Dec)</option>
-                  <option value="sqft">বর্গফুট (Square Feet)</option>
-                  <option value="sqm">বর্গমিটার (Square Metre)</option>
+                  <option value="decimal">{t('Decimal / Shotok', 'শতক / ডেসিমেল')}</option>
+                  <option value="katha">{t('Katha (1.65 Decimal)', 'কাঠা (১.৬৫ শতক)')}</option>
+                  <option value="bigha">{t('Bigha (33 Decimal)', 'বিঘা (৩৩ শতক)')}</option>
+                  <option value="acre">{t('Acre (100 Decimal)', 'একর (১০০ শতক)')}</option>
+                  <option value="sqft">{t('Square Feet', 'বর্গফুট')}</option>
+                  <option value="sqm">{t('Square Metre', 'বর্গমিটার')}</option>
                 </select>
               </Field>
             </div>
 
             {converted && (
               <div className="border border-line bg-sheet-raised p-4">
-                <p className="mono mb-3 text-2xs uppercase text-ink-3">Standard Bangladesh Conversions (DLRS)</p>
+                <p className="mono mb-3 text-2xs uppercase text-ink-3">
+                  {t('Standard Bangladesh Conversions (DLRS)', 'সরকারি ভূমি পরিমাপক রূপান্তর (ডিএলআরএস)')}
+                </p>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <DataRow label="শতক / ডেসিমেল (Decimal)" value={`${converted.decimal} dec`} mono />
-                  <DataRow label="কাঠা (Katha)" value={`${converted.katha} katha`} mono />
-                  <DataRow label="বিঘা (Bigha)" value={`${converted.bigha} bigha`} mono />
-                  <DataRow label="একর (Acre)" value={`${converted.acre} acre`} mono />
-                  <DataRow label="বর্গফুট (Sq Feet)" value={`${converted.squareFeet.toLocaleString()} sq ft`} mono />
-                  <DataRow label="বর্গমিটার (Sq Metre)" value={`${converted.squareMetres.toLocaleString()} sq m`} mono />
+                  <DataRow label={t('Decimal', 'শতক')} value={`${converted.decimal} ${t('dec', 'শতক')}`} mono />
+                  <DataRow label={t('Katha', 'কাঠা')} value={`${converted.katha} ${t('katha', 'কাঠা')}`} mono />
+                  <DataRow label={t('Bigha', 'বিঘা')} value={`${converted.bigha} ${t('bigha', 'বিঘা')}`} mono />
+                  <DataRow label={t('Acre', 'একর')} value={`${converted.acre} ${t('acre', 'একর')}`} mono />
+                  <DataRow label={t('Square Feet', 'বর্গফুট')} value={`${converted.squareFeet.toLocaleString()} ${t('sq ft', 'বর্গফুট')}`} mono />
+                  <DataRow label={t('Square Metre', 'বর্গমিটার')} value={`${converted.squareMetres.toLocaleString()} ${t('sq m', 'বর্গমিটার')}`} mono />
                 </div>
               </div>
             )}
@@ -152,7 +156,7 @@ export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.
         {tab === 'faraez' && (
           <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-4">
-              <Field label="Total Land (মোট জমি শতকে)" htmlFor="farea">
+              <Field label={t('Total Land (Decimal)', 'মোট জমি (শতক)')} htmlFor="farea">
                 <input
                   id="farea"
                   type="number"
@@ -162,7 +166,7 @@ export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.
                   className={`${inputClass} mono tnum`}
                 />
               </Field>
-              <Field label="Sons (পুত্র)" htmlFor="fsons">
+              <Field label={t('Sons', 'পুত্র সন্তান')} htmlFor="fsons">
                 <input
                   id="fsons"
                   type="number"
@@ -172,7 +176,7 @@ export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.
                   className={`${inputClass} mono tnum`}
                 />
               </Field>
-              <Field label="Daughters (কন্যা)" htmlFor="fdaughters">
+              <Field label={t('Daughters', 'কন্যা সন্তান')} htmlFor="fdaughters">
                 <input
                   id="fdaughters"
                   type="number"
@@ -182,7 +186,7 @@ export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.
                   className={`${inputClass} mono tnum`}
                 />
               </Field>
-              <Field label="Wife (স্ত্রী)" htmlFor="fwife">
+              <Field label={t('Wife', 'স্ত্রী')} htmlFor="fwife">
                 <input
                   id="fwife"
                   type="number"
@@ -196,7 +200,7 @@ export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <Field label="Husband (স্বামী)" htmlFor="fhus">
+              <Field label={t('Husband', 'স্বামী')} htmlFor="fhus">
                 <input
                   id="fhus"
                   type="number"
@@ -207,7 +211,7 @@ export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.
                   className={`${inputClass} mono tnum`}
                 />
               </Field>
-              <Field label="Father (পিতা)" htmlFor="ffather">
+              <Field label={t('Father', 'পিতা')} htmlFor="ffather">
                 <input
                   id="ffather"
                   type="number"
@@ -218,7 +222,7 @@ export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.
                   className={`${inputClass} mono tnum`}
                 />
               </Field>
-              <Field label="Mother (মাতা)" htmlFor="fmother">
+              <Field label={t('Mother', 'মাতা')} htmlFor="fmother">
                 <input
                   id="fmother"
                   type="number"
@@ -234,8 +238,12 @@ export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.
             {faraezShares.length > 0 ? (
               <div className="border border-line bg-sheet-raised p-4">
                 <div className="mb-3 flex items-center justify-between">
-                  <p className="mono text-2xs uppercase text-ink-3">Inheritance Distribution (ওয়ারিশ বণ্টন)</p>
-                  <p className="mono text-xs text-indigo">Total: {faraezTotal.toFixed(2)} decimal</p>
+                  <p className="mono text-2xs uppercase text-ink-3">
+                    {t('Inheritance Distribution', 'ওয়ারিশভিত্তিক সম্পত্তি বণ্টন')}
+                  </p>
+                  <p className="mono text-xs text-indigo">
+                    {t('Total', 'মোট')}: {faraezTotal.toFixed(2)} {t('decimal', 'শতক')}
+                  </p>
                 </div>
                 <div className="space-y-2">
                   {faraezShares.map((s, idx) => (
@@ -245,14 +253,16 @@ export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.
                     >
                       <div>
                         <span className="font-medium text-ink">
-                          {s.relation} ({s.relationBn}) × {s.count}
+                          {lang === 'bn' ? s.relationBn : s.relation} &times; {s.count}
                         </span>
                         <span className="mono ml-2 text-2xs text-ink-3">{s.fraction}</span>
                       </div>
                       <div className="text-right">
-                        <span className="mono font-semibold text-ink">{s.totalDecimal} decimal</span>
+                        <span className="mono font-semibold text-ink">
+                          {s.totalDecimal} {t('decimal', 'শতক')}
+                        </span>
                         <span className="mono ml-2 text-2xs text-ink-3">
-                          ({s.perPersonDecimal} dec each · {s.percentage}%)
+                          ({s.perPersonDecimal} {t('dec each', 'শতক/জন')} &middot; {s.percentage}%)
                         </span>
                       </div>
                     </div>

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { ArrowRight, Bell, FileText, Landmark, MapPin, Scale, Search, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Bell, FileText, Landmark, MapPin, Scale, Search, ShieldCheck, Github } from 'lucide-react';
 import { Link, useRouter } from '../lib/router';
 import { Counter, Lines, Reveal, TypedId } from '../components/motion';
 import ParcelPlate from '../components/ParcelPlate';
-import { Button, Eyebrow, Panel, StatusMark, ThemeToggle, inputClass } from '../components/ui';
+import { Button, Eyebrow, Panel, StatusMark, ThemeToggle, LanguageToggle, inputClass } from '../components/ui';
+import { useLanguage } from '../lib/language';
 import type { Theme } from '../lib/theme';
 
 /* Under one Parcel ID. Not a sequence, so no 01/02/03 numbering —
@@ -30,6 +31,7 @@ const COMPARE = [
 
 export default function Landing({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: () => void }) {
   const { navigate } = useRouter();
+  const { lang, toggleLang, t } = useLanguage();
   const [lookup, setLookup] = useState('');
 
   const openParcel = (e: React.FormEvent) => {
@@ -48,27 +50,41 @@ export default function Landing({ theme, onToggleTheme }: { theme: Theme; onTogg
             </span>
             <span className="leading-none">
               <span className="bn block text-[15px] font-semibold text-ink">ভূমি সেবা</span>
-              <span className="mono block text-[9px] uppercase tracking-wider text-ink-3">Parcel record</span>
+              <span className="mono block text-[9px] uppercase tracking-wider text-ink-3">
+                {t('Parcel record', 'স্মার্ট ভূমি রেকর্ড')}
+              </span>
             </span>
           </Link>
 
           <nav className="hidden items-center gap-7 text-sm text-ink-2 md:flex">
             <a href="#record" className="transition-colors duration-1 hover:text-ink">
-              The record
+              {t('The record', 'রেকর্ড পরিচিতি')}
             </a>
             <a href="#change" className="transition-colors duration-1 hover:text-ink">
-              What changes
+              {t('What changes', 'সুবিধাসমূহ')}
             </a>
             <a href="#certainty" className="transition-colors duration-1 hover:text-ink">
-              Payment certainty
+              {t('Payment certainty', 'পেমেন্ট ও দাখিলা')}
             </a>
           </nav>
 
           <div className="flex items-center gap-2">
+            <a
+              href="https://github.com/pbs002-s"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub Repository & Creator: pbs002-s"
+              title="Built by pbs002-s"
+              className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-sheet-raised px-2.5 text-xs font-semibold text-ink-2 transition-colors hover:border-ink hover:text-ink"
+            >
+              <Github className="h-3.5 w-3.5" />
+              <span className="mono text-[11px]">pbs002-s</span>
+            </a>
+            <LanguageToggle lang={lang} onToggle={toggleLang} />
             <ThemeToggle theme={theme} onToggle={onToggleTheme} />
             <Link to="/signin">
               <Button variant="primary" size="sm">
-                Sign in
+                {t('Sign in', 'প্রবেশ করুন')}
               </Button>
             </Link>
           </div>
@@ -355,14 +371,44 @@ export default function Landing({ theme, onToggleTheme }: { theme: Theme; onTogg
             <div>
               <p className="bn text-sm font-semibold text-ink">ভূমি সেবা</p>
               <p className="mt-1 text-xs text-ink-3">
-                Land service helpline <span className="mono">16122</span>
+                {t('Land service helpline', 'ভূমি সেবা হটলাইন')} <span className="mono">16122</span>
+              </p>
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-2xs text-ink-3">{t('Created by', 'প্রকল্প নির্মাতা')}:</span>
+                <a
+                  href="https://github.com/pbs002-s"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded border border-line bg-sheet-raised px-2 py-1 text-xs font-semibold text-indigo transition-colors hover:border-indigo"
+                >
+                  <Github className="h-3 w-3" />
+                  <span>pbs002-s</span>
+                </a>
+              </div>
+            </div>
+            <div className="max-w-measure space-y-2 text-xs text-ink-3">
+              <p>
+                {t(
+                  'This is an independent open-source land automation platform prototype engineered by',
+                  'এটি একটি মুক্ত উৎসের ডিজিটাল ভূমি প্ল্যাটফর্ম প্রোটোটাইপ যা তৈরি করেছেন'
+                )}{' '}
+                <a
+                  href="https://github.com/pbs002-s"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-ink underline decoration-line hover:text-indigo"
+                >
+                  pbs002-s (GitHub)
+                </a>
+                .
+              </p>
+              <p className="text-[11px] text-ink-3/80">
+                {t(
+                  'Demonstration interface built from public feature research for modernizing land governance, e-Mutation, and LD Tax collection.',
+                  'জনস্বার্থে ভূমি প্রশাসন আধুনিকায়ন, ই-নামজারি ও কর আদায় ব্যবস্থার গবেষণামূলক ডেমো।'
+                )}
               </p>
             </div>
-            <p className="max-w-measure text-xs text-ink-3">
-              This is an unaffiliated demonstration interface built from public feature research. It is not an
-              official service of the Ministry of Land, holds no authoritative records, and must not be used
-              for any legal or financial decision.
-            </p>
           </div>
         </div>
       </footer>

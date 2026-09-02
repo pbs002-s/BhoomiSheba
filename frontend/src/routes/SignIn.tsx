@@ -5,7 +5,8 @@ import { demoAccounts } from '../lib/demoData';
 import { writeSession } from '../lib/api';
 import { Lines } from '../components/motion';
 import ParcelPlate from '../components/ParcelPlate';
-import { Button, Eyebrow, Field, ThemeToggle, inputClass } from '../components/ui';
+import { Button, Eyebrow, Field, ThemeToggle, LanguageToggle, inputClass } from '../components/ui';
+import { useLanguage } from '../lib/language';
 import { cx } from '../lib/format';
 import type { Role } from '../lib/types';
 import type { Theme } from '../lib/theme';
@@ -17,6 +18,7 @@ import type { Theme } from '../lib/theme';
  */
 export default function SignIn({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: () => void }) {
   const { navigate } = useRouter();
+  const { lang, toggleLang, t } = useLanguage();
   const [role, setRole] = useState<Role>('citizen');
   const [step, setStep] = useState<'identity' | 'code'>('identity');
   const [nid, setNid] = useState('');
@@ -82,9 +84,10 @@ export default function SignIn({ theme, onToggleTheme }: { theme: Theme; onToggl
             <span className="bn text-[15px] font-semibold text-ink">ভূমি সেবা</span>
           </Link>
           <div className="flex items-center gap-2">
+            <LanguageToggle lang={lang} onToggle={toggleLang} />
             <ThemeToggle theme={theme} onToggle={onToggleTheme} />
             <Link to="/" className="text-sm text-ink-2 transition-colors duration-1 hover:text-ink">
-              Back
+              {t('Back', 'ফিরে যান')}
             </Link>
           </div>
         </div>

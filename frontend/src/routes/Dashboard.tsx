@@ -14,13 +14,15 @@ import {
   X,
   Calculator,
   ShieldAlert,
+  Github,
 } from 'lucide-react';
 import { Link, useRouter } from '../lib/router';
 import { getParcel, getSource, listParcels, onSourceChange, readSession, writeSession } from '../lib/api';
 import type { DataSource } from '../lib/api';
 import type { Parcel } from '../lib/types';
 import { cx, decimals, taka } from '../lib/format';
-import { Button, StatusMark, ThemeToggle, inputClass } from '../components/ui';
+import { Button, StatusMark, ThemeToggle, LanguageToggle, inputClass } from '../components/ui';
+import { useLanguage } from '../lib/language';
 import { TypedId } from '../components/motion';
 import Overview from './panels/Overview';
 import MapPanel from './panels/MapPanel';
@@ -36,6 +38,7 @@ type TabId = 'overview' | 'map' | 'tax' | 'mutations' | 'checks' | 'services';
 
 export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: () => void }) {
   const { navigate } = useRouter();
+  const { lang, toggleLang, t, pickLang, formatArea } = useLanguage();
   const session = readSession();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -121,19 +124,18 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
   const flags = parcel?.discrepancies?.filter((d) => !d.isResolved) ?? [];
   const isOfficer = session?.role === 'officer';
 
-  const tabs: Array<{ id: TabId; en: string; bn: string; icon: typeof UserCheck; mark?: string }> = [
-    { id: 'overview', en: 'Overview', bn: 'সারসংক্ষেপ', icon: UserCheck },
-    { id: 'map', en: 'Map', bn: 'নকশা', icon: Compass },
-    { id: 'tax', en: 'Land tax', bn: 'ভূমি কর', icon: Receipt, mark: dueTax ? 'Due' : undefined },
+  const tabs: Array<{ id: TabId; label: string; icon: typeof UserCheck; mark?: string }> = [
+    { id: 'overview', label: t('Overview', 'সারসংক্ষেপ'), icon: UserCheck },
+    { id: 'map', label: t('Map', 'নকশা'), icon: Compass },
+    { id: 'tax', label: t('Land Tax', 'ভূমি উন্নয়ন কর'), icon: Receipt, mark: dueTax ? t('Due', 'বকেয়া') : undefined },
     {
       id: 'mutations',
-      en: 'নামজারি',
-      bn: 'Mutation',
+      label: t('Mutation', 'নামজারি'),
       icon: Scale,
       mark: openMutations.length ? String(openMutations.length) : undefined,
     },
-    { id: 'checks', en: 'Checks', bn: 'যাচাই', icon: ShieldCheck, mark: flags.length ? String(flags.length) : undefined },
-    { id: 'services', en: 'Services', bn: 'সেবা', icon: Activity },
+    { id: 'checks', label: t('Reconciliation', 'যাচাই ও অডিট'), icon: ShieldCheck, mark: flags.length ? String(flags.length) : undefined },
+    { id: 'services', label: t('Services', 'নাগরিক সেবা'), icon: Activity },
   ];
 
   return (
@@ -145,11 +147,11 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
       {/* ------------------------------------------------------- sidebar */}
       <aside
         className={cx(
-          'fixed top-0 z-50 flex h-screen w-64 shrink-0 flex-col justify-between border-r border-line bg-sheet transition-transform duration-2 ease-sheet md:sticky md:translate-x-0',
+          'fixed top-0 z-50 flex h-screen w-64 shrink-0 flex-col border-r border-line bg-sheet transition-transform duration-2 ease-sheet md:sticky md:top-0 md:translate-x-0',
           navOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="space-y-6 overflow-y-auto p-4">
+        <div className="flex-1 space-y-6 overflow-y-auto p-4">
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2.5">
               <span className="flex h-7 w-7 items-center justify-center border border-ink text-ink">
@@ -157,7 +159,9 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
               </span>
               <span className="leading-none">
                 <span className="bn block text-sm font-semibold text-ink">ভূমি সেবা</span>
-                <span className="mono block text-[9px] uppercase tracking-wider text-ink-3">Parcel record</span>
+                <span className="mono block text-[9px] uppercase tracking-wider text-ink-3">
+                  {t('Parcel record', 'স্মার্ট ভূমি পোর্টাল')}
+                </span>
               </span>
             </Link>
             <button onClick={() => setNavOpen(false)} className="p-1 text-ink-3 md:hidden" aria-label="Close menu">
@@ -169,9 +173,11 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
           <div>
             <div className="mb-2 flex items-center justify-between">
               <span className="mono text-2xs uppercase text-ink-3">
-                {isOfficer ? 'Jurisdiction parcels' : 'Your parcels'}
+                {isOfficer ? t('Jurisdiction parcels', 'এলাকাধীন খতিয়ান') : t('Your parcels', 'আপনার রেকর্ডসমূহ')}
               </span>
-              <span className="mono text-2xs text-ink-3">{all.length || (parcel ? 1 : 0)} records</span>
+              <span className="mono text-2xs text-ink-3">
+                {all.length || (parcel ? 1 : 0)} {t('records', 'টি রেকর্ড')}
+              </span>
             </div>
             <ul className="space-y-px">
               {(all.length ? all : parcel ? [parcel] : []).map((p) => (
@@ -189,7 +195,7 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
                       {p.id}
                     </span>
                     <span className="block text-xs text-ink-3">
-                      {p.upazila}, {p.district} · {decimals(p.areaDecimal)}
+                      {p.upazila}, {p.district} · {formatArea(p.areaDecimal)}
                     </span>
                   </button>
                 </li>
@@ -199,15 +205,17 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
 
           {/* modules */}
           <nav>
-            <span className="mono mb-2 block text-2xs uppercase text-ink-3">This parcel</span>
+            <span className="mono mb-2 block text-2xs uppercase text-ink-3">
+              {t('This parcel', 'নির্বাচিত খতিয়ান')}
+            </span>
             <ul className="space-y-px">
-              {tabs.map((t) => {
-                const active = tab === t.id;
+              {tabs.map((tItem) => {
+                const active = tab === tItem.id;
                 return (
-                  <li key={t.id}>
+                  <li key={tItem.id}>
                     <button
                       onClick={() => {
-                        setTab(t.id);
+                        setTab(tItem.id);
                         setNavOpen(false);
                       }}
                       className={cx(
@@ -218,22 +226,19 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
                       )}
                     >
                       <span className="flex items-center gap-2.5">
-                        <t.icon className={cx('h-3.5 w-3.5', active ? 'text-ink' : 'text-ink-3')} />
-                        <span>
-                          <span className={cx('block text-[13px]', active ? 'text-ink font-semibold' : 'text-ink-2')}>
-                            {t.en}
-                          </span>
-                          <span className="bn block text-[10px] text-ink-3">{t.bn}</span>
+                        <tItem.icon className={cx('h-3.5 w-3.5', active ? 'text-ink' : 'text-ink-3')} />
+                        <span className={cx('block text-[13px]', active ? 'text-ink font-semibold' : 'text-ink-2')}>
+                          {tItem.label}
                         </span>
                       </span>
-                      {t.mark && (
+                      {tItem.mark && (
                         <span
                           className={cx(
                             'mono rounded-sm px-1.5 py-0.5 text-[10px] font-medium',
-                            t.id === 'tax' ? 'bg-seal-soft text-seal' : 'bg-amber-soft text-amber'
+                            tItem.id === 'tax' ? 'bg-seal-soft text-seal' : 'bg-amber-soft text-amber'
                           )}
                         >
-                          {t.mark}
+                          {tItem.mark}
                         </span>
                       )}
                     </button>
@@ -253,7 +258,7 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
           </div>
         </div>
 
-        <div className="space-y-3 border-t border-line p-4">
+        <div className="shrink-0 space-y-3 border-t border-line p-4">
           <div>
             <div className="flex items-center gap-2">
               <p className="text-sm font-semibold text-ink">{session?.name}</p>
@@ -269,11 +274,25 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
             onClick={signOut}
             className="flex items-center gap-2 text-xs text-ink-2 transition-colors duration-1 hover:text-ink"
           >
-            <LogOut className="h-3.5 w-3.5" /> Sign out
+            <LogOut className="h-3.5 w-3.5" /> {t('Sign out', 'লগআউট')}
           </button>
-          <p className="text-[10px] text-ink-3">
-            Authoritative digital cadastre prototype · Ministry of Land & DLRS.
-          </p>
+          <div className="border-t border-line-hair pt-2.5">
+            <a
+              href="https://github.com/pbs002-s"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between text-[11px] text-ink-3 transition-colors hover:text-indigo"
+            >
+              <span>{t('Engineered by', 'নির্মাতা')}</span>
+              <span className="flex items-center gap-1 font-semibold text-ink">
+                <Github className="h-3 w-3 text-indigo" />
+                pbs002-s
+              </span>
+            </a>
+            <p className="mt-1 text-[10px] text-ink-3">
+              {t('Authoritative digital cadastre prototype.', 'জাতীয় ডিজিটাল ভূমি ব্যবস্থাপনা প্রোটোটাইপ।')}
+            </p>
+          </div>
         </div>
       </aside>
 
@@ -337,11 +356,12 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
 
             <div className="ml-auto flex items-center gap-2">
               <Button size="sm" onClick={() => setCalcOpen(true)} className="hidden sm:inline-flex">
-                <Calculator className="h-3.5 w-3.5" /> Tools
+                <Calculator className="h-3.5 w-3.5" /> {t('Tools', 'টুলস')}
               </Button>
               <StatusMark tone={source === 'live' ? 'state' : 'neutral'}>
-                {source === 'live' ? 'Live data' : 'Seeded data'}
+                {source === 'live' ? t('Live data', 'লাইভ ডেটা') : t('Seeded data', 'ডেমো ডেটা')}
               </StatusMark>
+              <LanguageToggle lang={lang} onToggle={toggleLang} />
               <ThemeToggle theme={theme} onToggle={onToggleTheme} />
             </div>
           </div>
@@ -390,32 +410,39 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
                       {parcel.upazila}, {parcel.district}
                     </h1>
                     <p className="mt-1 text-sm text-ink-2">
-                      {parcel.currentOwner} · <span className="bn">মৌজা {parcel.mouza}</span> ·{' '}
-                      <span className="mono text-xs">দাগ {parcel.dagNo}</span>
+                      <span className="font-semibold">{pickLang(parcel.currentOwner)}</span> &middot;{' '}
+                      <span>{t(`Mouza ${parcel.mouza}`, `মৌজা ${parcel.mouza}`)}</span> &middot;{' '}
+                      <span className="mono text-xs">{t(`Plot ${parcel.dagNo}`, `দাগ ${parcel.dagNo}`)}</span>
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {dueTax ? (
                       <StatusMark tone="seal">
-                        <AlertTriangle className="h-3 w-3" /> {taka(dueTax.totalDueBDT)} due
+                        <AlertTriangle className="h-3 w-3" /> {taka(dueTax.totalDueBDT)} {t('due', 'বকেয়া')}
                       </StatusMark>
                     ) : (
-                      <StatusMark tone="state">Tax clear</StatusMark>
+                      <StatusMark tone="state">{t('Tax clear', 'কর পরিশোধিত')}</StatusMark>
                     )}
                     {openMutations.length > 0 && (
-                      <StatusMark tone="amber">{openMutations.length} নামজারি open</StatusMark>
+                      <StatusMark tone="amber">
+                        {openMutations.length} {t('mutation active', 'নামজারি চলমান')}
+                      </StatusMark>
                     )}
-                    {flags.length > 0 && <StatusMark tone="amber">{flags.length} flagged</StatusMark>}
+                    {flags.length > 0 && (
+                      <StatusMark tone="amber">
+                        {flags.length} {t('flagged', 'চিহ্নিত')}
+                      </StatusMark>
+                    )}
                   </div>
                 </div>
 
                 {/* key figures — a register strip */}
                 <dl className="mt-5 grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-4">
                   {[
-                    ['Recorded area', decimals(parcel.areaDecimal)],
-                    ['খতিয়ান', parcel.khatianNo],
-                    ['Land class', parcel.landClass],
-                    ['Holding', parcel.holdingNo],
+                    [t('Recorded Area', 'জমির পরিমাণ'), formatArea(parcel.areaDecimal)],
+                    [t('Khatian No', 'খতিয়ান নং'), parcel.khatianNo],
+                    [t('Land Class', 'জমির শ্রেণি'), pickLang(parcel.landClass)],
+                    [t('Holding No', 'হোল্ডিং নং'), parcel.holdingNo],
                   ].map(([k, v]) => (
                     <div key={k} className="bg-sheet px-3.5 py-3">
                       <dt className="mono text-2xs uppercase text-ink-3">{k}</dt>
@@ -429,16 +456,16 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
 
               {/* tabs, horizontal on small screens */}
               <div className="mb-5 flex gap-1 overflow-x-auto border-b border-line md:hidden">
-                {tabs.map((t) => (
+                {tabs.map((tItem) => (
                   <button
-                    key={t.id}
-                    onClick={() => setTab(t.id)}
+                    key={tItem.id}
+                    onClick={() => setTab(tItem.id)}
                     className={cx(
                       '-mb-px shrink-0 border-b-2 px-3 py-2 text-[13px] transition-colors duration-1',
-                      tab === t.id ? 'border-ink text-ink font-semibold' : 'border-transparent text-ink-3'
+                      tab === tItem.id ? 'border-ink text-ink font-semibold' : 'border-transparent text-ink-3'
                     )}
                   >
-                    {t.en}
+                    {tItem.label}
                   </button>
                 ))}
               </div>
