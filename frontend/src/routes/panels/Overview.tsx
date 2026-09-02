@@ -3,7 +3,8 @@ import { FileText, ShieldCheck, Eye, Calculator, AlertCircle } from 'lucide-reac
 import type { LandDocument, Parcel } from '../../lib/types';
 import { Button, DataRow, Panel, StatusMark } from '../../components/ui';
 import { Reveal } from '../../components/motion';
-import { decimals, katha, bigha, sqft, maskNid, relativeDays, shortDate } from '../../lib/format';
+import { useLanguage } from '../../lib/language';
+import { decimals, sqft, maskNid, relativeDays, shortDate } from '../../lib/format';
 import DocumentViewerModal from '../../components/DocumentViewerModal';
 import LandCalculatorModal from '../../components/LandCalculatorModal';
 import DisputeModal from '../../components/DisputeModal';
@@ -21,6 +22,7 @@ const EVENT_TONE: Record<string, 'state' | 'amber' | 'seal' | 'indigo'> = {
 };
 
 export default function Overview({ parcel, onChanged }: { parcel: Parcel; onChanged?: () => void }) {
+  const { lang, t, pickLang, formatKatha, formatBigha, formatArea } = useLanguage();
   const events = parcel.timelineEvents ?? [];
   const docs = parcel.documents ?? [];
 
@@ -34,60 +36,76 @@ export default function Overview({ parcel, onChanged }: { parcel: Parcel; onChan
         <div className="space-y-5">
           <Reveal>
             <Panel
-              label="Ownership Record"
+              label={t('Ownership Record', 'মালিকানা রেকর্ড')}
               meta={parcel.khatianNo}
               action={
                 <div className="flex items-center gap-2">
                   <Button size="sm" onClick={() => setCalcOpen(true)}>
-                    <Calculator className="h-3.5 w-3.5" /> Unit Tools
+                    <Calculator className="h-3.5 w-3.5" /> {t('Unit Tools', 'পরিমাপক')}
                   </Button>
                 </div>
               }
             >
-              <DataRow label="Recorded owner" bn="মালিক" value={parcel.currentOwner} />
-              <DataRow label="NID Number" value={maskNid(parcel.nidNumber)} mono />
-              <DataRow label="Mobile" value={parcel.phone} mono />
-              <DataRow label="Land class" bn="শ্রেণি" value={parcel.landClass} />
-              <DataRow label="Holding" value={parcel.holdingNo} mono />
+              <DataRow label="Recorded owner" bn="মালিক" value={pickLang(parcel.currentOwner)} />
+              <DataRow label="NID Number" bn="জাতীয় পরিচয়পত্র" value={maskNid(parcel.nidNumber)} mono />
+              <DataRow label="Mobile" bn="মোবাইল নম্বর" value={parcel.phone} mono />
+              <DataRow label="Land class" bn="শ্রেণি" value={pickLang(parcel.landClass)} />
+              <DataRow label="Holding" bn="হোল্ডিং নং" value={parcel.holdingNo} mono />
               <DataRow
                 label="Recorded area"
                 bn="জমির পরিমাণ"
-                value={decimals(parcel.areaDecimal)}
+                value={formatArea(parcel.areaDecimal)}
                 mono
               />
-              <DataRow label="Katha & Bigha" value={`${katha(parcel.areaDecimal)} · ${bigha(parcel.areaDecimal)}`} mono />
-              <DataRow label="Total Square Feet" value={sqft(parcel.areaDecimal)} mono />
+              <DataRow
+                label="Katha & Bigha"
+                bn="কাঠা ও বিঘা"
+                value={`${formatKatha(parcel.areaDecimal)} · ${formatBigha(parcel.areaDecimal)}`}
+                mono
+              />
+              <DataRow label="Total Square Feet" bn="বর্গফুট" value={sqft(parcel.areaDecimal)} mono />
               {parcel.mappedAreaDecimal !== undefined && (
-                <DataRow label="Digitized Area" value={decimals(parcel.mappedAreaDecimal)} mono />
+                <DataRow
+                  label="Digitized Area"
+                  bn="নকশাকৃত পরিমাণ"
+                  value={formatArea(parcel.mappedAreaDecimal)}
+                  mono
+                />
               )}
             </Panel>
           </Reveal>
 
           <Reveal delay={80}>
             <Panel
-              label="Cadastral Location"
+              label={t('Cadastral Location', 'মৌজা ও ভৌগোলিক অবস্থান')}
               meta={`JL ${parcel.jlNumber}`}
               action={
                 <Button size="sm" onClick={() => setDisputeOpen(true)}>
-                  <AlertCircle className="h-3.5 w-3.5" /> Lodge Dispute
+                  <AlertCircle className="h-3.5 w-3.5" /> {t('Lodge Dispute', 'অভিযোগ দাখিল')}
                 </Button>
               }
             >
-              <DataRow label="Division" value={parcel.division} />
+              <DataRow label="Division" bn="বিভাগ" value={parcel.division} />
               <DataRow label="District" bn="জেলা" value={parcel.district} />
               <DataRow label="Upazila" bn="উপজেলা" value={parcel.upazila} />
               <DataRow label="Mouza" bn="মৌজা" value={parcel.mouza} />
-              <DataRow label="Dag No" bn="দাগ" value={parcel.dagNo} mono />
+              <DataRow label="Dag No" bn="দাগ নং" value={parcel.dagNo} mono />
             </Panel>
           </Reveal>
         </div>
 
         <div className="space-y-5">
           <Reveal delay={40}>
-            <Panel label="Activity & Judicial History" meta={`${events.length} events`}>
+            <Panel
+              label={t('Activity & Judicial History', 'কার্যক্রম ও বিচারিক ইতিহাস')}
+              meta={`${events.length} ${t('events', 'টি ঘটনা')}`}
+            >
               {events.length === 0 ? (
                 <p className="text-sm text-ink-3">
-                  Nothing recorded against this parcel yet. Events appear here as offices act on it.
+                  {t(
+                    'Nothing recorded against this parcel yet. Events appear here as offices act on it.',
+                    'এই রেকর্ডে এখনো কোনো নতুন কার্যক্রম নেই।'
+                  )}
                 </p>
               ) : (
                 <ol className="relative space-y-0">
@@ -100,14 +118,14 @@ export default function Overview({ parcel, onChanged }: { parcel: Parcel; onChan
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="flex flex-wrap items-baseline justify-between gap-2">
-                          <span className="text-sm font-medium text-ink">{e.title}</span>
+                          <span className="text-sm font-medium text-ink">{pickLang(e.title)}</span>
                           <span className="mono text-2xs text-ink-3">
                             {shortDate(e.eventDate)} · {relativeDays(e.eventDate)}
                           </span>
                         </span>
-                        <span className="mt-1 block text-sm text-ink-2">{e.description}</span>
+                        <span className="mt-1 block text-sm text-ink-2">{pickLang(e.description)}</span>
                         <span className="mt-1.5 flex flex-wrap items-center gap-2">
-                          <span className="mono text-2xs uppercase text-ink-3">{e.actor}</span>
+                          <span className="mono text-2xs uppercase text-ink-3">{pickLang(e.actor)}</span>
                           {e.referenceDoc && (
                             <StatusMark tone={EVENT_TONE[e.eventType] ?? 'neutral'}>{e.referenceDoc}</StatusMark>
                           )}
@@ -121,7 +139,11 @@ export default function Overview({ parcel, onChanged }: { parcel: Parcel; onChan
           </Reveal>
 
           <Reveal delay={120}>
-            <Panel label="Document Vault & OCR" bodyClassName="px-0 py-0" meta={`${docs.length} files`}>
+            <Panel
+              label={t('Document Vault & OCR', 'ডিজিটাল নথি ও ওসিয়ার')}
+              bodyClassName="px-0 py-0"
+              meta={`${docs.length} ${t('files', 'টি নথি')}`}
+            >
               {docs.length === 0 ? (
                 <p className="px-5 py-5 text-sm text-ink-3">No documents attached to this parcel.</p>
               ) : (
