@@ -29,6 +29,7 @@ import { cx, decimals, taka } from '../lib/format';
 import { Button, StatusMark, ThemeToggle, LanguageToggle, inputClass } from '../components/ui';
 import { useLanguage } from '../lib/language';
 import { TypedId } from '../components/motion';
+import { useGSAP, gsap, prefersReducedMotion } from '../lib/gsap';
 import Overview from './panels/Overview';
 import MapPanel from './panels/MapPanel';
 import LineagePanel from './panels/LineagePanel';
@@ -73,6 +74,23 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
   const [radarOpen, setRadarOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<Parcel[]>([]);
   const [searchFocused, setSearchFocused] = useState(false);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+
+  // Panel switch: fade + rise the whole panel, then let its top-level
+  // sections settle in with a light stagger — no reflow, opacity/transform only.
+  useGSAP(
+    () => {
+      const el = panelRef.current;
+      if (!el || prefersReducedMotion()) return;
+      const sections = el.children.length ? Array.from(el.children) : [el];
+      gsap.fromTo(
+        sections,
+        { opacity: 0, y: 8 },
+        { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out', stagger: 0.05 }
+      );
+    },
+    { dependencies: [tab], scope: panelRef }
+  );
 
   useEffect(() => onSourceChange(setSourceState) as unknown as () => void, []);
 
@@ -576,7 +594,7 @@ export default function Dashboard({ theme, onToggleTheme }: { theme: Theme; onTo
                     ))}
                   </div>
 
-                  <div key={tab} className="anim-sheet-in">
+                  <div key={tab} ref={panelRef}>
                     {tab === 'overview' && <Overview parcel={parcel} onChanged={() => load(parcelId)} />}
                     {tab === 'map' && <MapPanel parcel={parcel} />}
                     {tab === 'lineage' && <LineagePanel parcel={parcel} />}
