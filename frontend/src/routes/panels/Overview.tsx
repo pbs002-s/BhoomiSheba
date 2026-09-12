@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { FileText, ShieldCheck, Eye, Calculator, AlertCircle } from 'lucide-react';
 import type { LandDocument, Parcel } from '../../lib/types';
 import { Button, DataRow, Panel, StatusMark } from '../../components/ui';
-import { Reveal } from '../../components/motion';
+import { Reveal, Stagger } from '../../components/motion';
 import { useLanguage } from '../../lib/language';
 import { decimals, sqft, maskNid, relativeDays, shortDate } from '../../lib/format';
 import DocumentViewerModal from '../../components/DocumentViewerModal';
@@ -108,7 +108,7 @@ export default function Overview({ parcel, onChanged }: { parcel: Parcel; onChan
                   )}
                 </p>
               ) : (
-                <ol className="relative space-y-0">
+                <Stagger as="ol" watch={parcel.id} className="relative space-y-0">
                   {events.map((e, i) => (
                     <li key={e.id} className="relative flex gap-4 pb-5 last:pb-0">
                       {/* the spine: a survey chain down the left */}
@@ -133,7 +133,7 @@ export default function Overview({ parcel, onChanged }: { parcel: Parcel; onChan
                       </span>
                     </li>
                   ))}
-                </ol>
+                </Stagger>
               )}
             </Panel>
           </Reveal>
@@ -147,7 +147,7 @@ export default function Overview({ parcel, onChanged }: { parcel: Parcel; onChan
               {docs.length === 0 ? (
                 <p className="px-5 py-5 text-sm text-ink-3">No documents attached to this parcel.</p>
               ) : (
-                <ul>
+                <Stagger as="ul" watch={parcel.id}>
                   {docs.map((d) => (
                     <li
                       key={d.id}
@@ -169,7 +169,7 @@ export default function Overview({ parcel, onChanged }: { parcel: Parcel; onChan
                       </div>
                     </li>
                   ))}
-                </ul>
+                </Stagger>
               )}
             </Panel>
           </Reveal>
