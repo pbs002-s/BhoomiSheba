@@ -1,0 +1,447 @@
+{
+  "division": "Khulna",
+  "total_districts": 10,
+  "total_upazilas": 60,
+  "districts": {
+    "Bagerhat": [
+      {
+        "upazila": "Bagerhat Sadar",
+        "pcode": "BD40010008",
+        "area_sqkm": 315.44423194,
+        "center_lat": 22.6761286,
+        "center_lon": 89.76267481
+      },
+      {
+        "upazila": "Chitalmari",
+        "pcode": "BD40010014",
+        "area_sqkm": 194.33534039,
+        "center_lat": 22.81113978,
+        "center_lon": 89.86525389
+      },
+      {
+        "upazila": "Fakirhat",
+        "pcode": "BD40010034",
+        "area_sqkm": 159.22396246,
+        "center_lat": 22.74261933,
+        "center_lon": 89.66610277
+      },
+      {
+        "upazila": "Kachua",
+        "pcode": "BD40010038",
+        "area_sqkm": 125.03600776,
+        "center_lat": 22.65213817,
+        "center_lon": 89.87394519
+      },
+      {
+        "upazila": "Mollahat",
+        "pcode": "BD40010056",
+        "area_sqkm": 180.76252725,
+        "center_lat": 22.8841779,
+        "center_lon": 89.77298864
+      },
+      {
+        "upazila": "Mongla",
+        "pcode": "BD40010058",
+        "area_sqkm": 1467.32129822,
+        "center_lat": 22.11653738,
+        "center_lon": 89.65966488
+      },
+      {
+        "upazila": "Morelganj",
+        "pcode": "BD40010060",
+        "area_sqkm": 442.74642677,
+        "center_lat": 22.48332119,
+        "center_lon": 89.83422475
+      },
+      {
+        "upazila": "Rampal",
+        "pcode": "BD40010073",
+        "area_sqkm": 277.68342893,
+        "center_lat": 22.59031343,
+        "center_lon": 89.65135819
+      },
+      {
+        "upazila": "Sharankhola",
+        "pcode": "BD40010077",
+        "area_sqkm": 909.92251335,
+        "center_lat": 22.06308526,
+        "center_lon": 89.82172027
+      }
+    ],
+    "Chuadanga": [
+      {
+        "upazila": "Alamdanga",
+        "pcode": "BD40180007",
+        "area_sqkm": 366.02754835,
+        "center_lat": 23.72952308,
+        "center_lon": 88.90824581
+      },
+      {
+        "upazila": "Chuadanga Sadar",
+        "pcode": "BD40180023",
+        "area_sqkm": 296.38808784,
+        "center_lat": 23.58945721,
+        "center_lon": 88.88544829
+      },
+      {
+        "upazila": "Damurhuda",
+        "pcode": "BD40180031",
+        "area_sqkm": 304.03643477,
+        "center_lat": 23.59201621,
+        "center_lon": 88.73978174
+      },
+      {
+        "upazila": "Jibannagar",
+        "pcode": "BD40180055",
+        "area_sqkm": 199.73242374,
+        "center_lat": 23.44297578,
+        "center_lon": 88.85026481
+      }
+    ],
+    "Jashore": [
+      {
+        "upazila": "Abhaynagar",
+        "pcode": "BD40410004",
+        "area_sqkm": 245.74531569,
+        "center_lat": 23.01770386,
+        "center_lon": 89.41968215
+      },
+      {
+        "upazila": "Bagharpara",
+        "pcode": "BD40410009",
+        "area_sqkm": 272.85578686,
+        "center_lat": 23.24253049,
+        "center_lon": 89.3353901
+      },
+      {
+        "upazila": "Chaugachha",
+        "pcode": "BD40410011",
+        "area_sqkm": 271.77187169,
+        "center_lat": 23.26325264,
+        "center_lon": 89.02328652
+      },
+      {
+        "upazila": "Jashore Sadar",
+        "pcode": "BD40410047",
+        "area_sqkm": 436.6544883,
+        "center_lat": 23.18247843,
+        "center_lon": 89.21885642
+      },
+      {
+        "upazila": "Jhikargachha",
+        "pcode": "BD40410023",
+        "area_sqkm": 307.18508986,
+        "center_lat": 23.06873072,
+        "center_lon": 89.05428478
+      },
+      {
+        "upazila": "Keshabpur",
+        "pcode": "BD40410038",
+        "area_sqkm": 256.79256752,
+        "center_lat": 22.88037398,
+        "center_lon": 89.23152615
+      },
+      {
+        "upazila": "Manirampur",
+        "pcode": "BD40410061",
+        "area_sqkm": 444.84184932,
+        "center_lat": 23.00645606,
+        "center_lon": 89.21986148
+      },
+      {
+        "upazila": "Sharsha",
+        "pcode": "BD40410090",
+        "area_sqkm": 340.57094186,
+        "center_lat": 23.04479212,
+        "center_lon": 88.94109704
+      }
+    ],
+    "Jhenaidah": [
+      {
+        "upazila": "Harinakundu",
+        "pcode": "BD40440014",
+        "area_sqkm": 228.65935496,
+        "center_lat": 23.64350865,
+        "center_lon": 89.07686969
+      },
+      {
+        "upazila": "Jhenaidah Sadar",
+        "pcode": "BD40440019",
+        "area_sqkm": 466.92676883,
+        "center_lat": 23.51638682,
+        "center_lon": 89.15753517
+      },
+      {
+        "upazila": "Kaliganj",
+        "pcode": "BD40440033",
+        "area_sqkm": 309.6733071,
+        "center_lat": 23.36959471,
+        "center_lon": 89.15233514
+      },
+      {
+        "upazila": "Kotchandpur",
+        "pcode": "BD40440042",
+        "area_sqkm": 164.35890287,
+        "center_lat": 23.44497008,
+        "center_lon": 89.00141696
+      },
+      {
+        "upazila": "Maheshpur",
+        "pcode": "BD40440071",
+        "area_sqkm": 419.75844987,
+        "center_lat": 23.32017163,
+        "center_lon": 88.85970006
+      },
+      {
+        "upazila": "Shailkupa",
+        "pcode": "BD40440080",
+        "area_sqkm": 376.13095322,
+        "center_lat": 23.66362143,
+        "center_lon": 89.24261925
+      }
+    ],
+    "Khulna": [
+      {
+        "upazila": "Batiaghata",
+        "pcode": "BD40470012",
+        "area_sqkm": 237.38377989,
+        "center_lat": 22.71333993,
+        "center_lon": 89.51491534
+      },
+      {
+        "upazila": "Dacope",
+        "pcode": "BD40470017",
+        "area_sqkm": 1103.68960334,
+        "center_lat": 22.24203107,
+        "center_lon": 89.52637642
+      },
+      {
+        "upazila": "Dighalia",
+        "pcode": "BD40470040",
+        "area_sqkm": 86.28562664,
+        "center_lat": 22.92151447,
+        "center_lon": 89.55377852
+      },
+      {
+        "upazila": "Dumuria",
+        "pcode": "BD40470030",
+        "area_sqkm": 456.13303663,
+        "center_lat": 22.80576338,
+        "center_lon": 89.39802703
+      },
+      {
+        "upazila": "Koyra",
+        "pcode": "BD40470053",
+        "area_sqkm": 1762.95147442,
+        "center_lat": 22.07788302,
+        "center_lon": 89.3950567
+      },
+      {
+        "upazila": "Paikgachha",
+        "pcode": "BD40470064",
+        "area_sqkm": 378.32882985,
+        "center_lat": 22.59006747,
+        "center_lon": 89.34020164
+      },
+      {
+        "upazila": "Phultala",
+        "pcode": "BD40470069",
+        "area_sqkm": 76.81250969,
+        "center_lat": 22.94830901,
+        "center_lon": 89.45416809
+      },
+      {
+        "upazila": "Rupsa",
+        "pcode": "BD40470075",
+        "area_sqkm": 119.614468,
+        "center_lat": 22.81922745,
+        "center_lon": 89.63623389
+      },
+      {
+        "upazila": "Terokhada",
+        "pcode": "BD40470094",
+        "area_sqkm": 189.44742858,
+        "center_lat": 22.91397441,
+        "center_lon": 89.65512323
+      },
+      {
+        "upazila": "Khulna City Corporation",
+        "pcode": "BD40473300",
+        "area_sqkm": 46.61825313,
+        "center_lat": 22.83731845,
+        "center_lon": 89.54114406
+      }
+    ],
+    "Kushtia": [
+      {
+        "upazila": "Bheramara",
+        "pcode": "BD40500015",
+        "area_sqkm": 151.15622724,
+        "center_lat": 24.0562809,
+        "center_lon": 88.98115536
+      },
+      {
+        "upazila": "Daulatpur",
+        "pcode": "BD40500039",
+        "area_sqkm": 483.72172988,
+        "center_lat": 24.03425965,
+        "center_lon": 88.83553965
+      },
+      {
+        "upazila": "Khoksa",
+        "pcode": "BD40500063",
+        "area_sqkm": 106.58067179,
+        "center_lat": 23.8108428,
+        "center_lon": 89.30040417
+      },
+      {
+        "upazila": "Kumarkhali",
+        "pcode": "BD40500071",
+        "area_sqkm": 267.93742381,
+        "center_lat": 23.85817582,
+        "center_lon": 89.21033767
+      },
+      {
+        "upazila": "Kushtia Sadar",
+        "pcode": "BD40500079",
+        "area_sqkm": 319.72177304,
+        "center_lat": 23.82447726,
+        "center_lon": 89.08978509
+      },
+      {
+        "upazila": "Mirpur",
+        "pcode": "BD40500094",
+        "area_sqkm": 310.13618057,
+        "center_lat": 23.89715846,
+        "center_lon": 88.98617202
+      }
+    ],
+    "Magura": [
+      {
+        "upazila": "Magura Sadar",
+        "pcode": "BD40550057",
+        "area_sqkm": 401.61470095,
+        "center_lat": 23.45188316,
+        "center_lon": 89.41242724
+      },
+      {
+        "upazila": "Mohammadpur",
+        "pcode": "BD40550066",
+        "area_sqkm": 226.41764469,
+        "center_lat": 23.40009353,
+        "center_lon": 89.55069065
+      },
+      {
+        "upazila": "Shalikha",
+        "pcode": "BD40550085",
+        "area_sqkm": 229.20980771,
+        "center_lat": 23.34769219,
+        "center_lon": 89.35926814
+      },
+      {
+        "upazila": "Sreepur",
+        "pcode": "BD40550095",
+        "area_sqkm": 185.09843159,
+        "center_lat": 23.59766202,
+        "center_lon": 89.42412163
+      }
+    ],
+    "Meherpur": [
+      {
+        "upazila": "Gangni",
+        "pcode": "BD40570047",
+        "area_sqkm": 340.35012677,
+        "center_lat": 23.85742395,
+        "center_lon": 88.77069557
+      },
+      {
+        "upazila": "Meherpur Sadar",
+        "pcode": "BD40570087",
+        "area_sqkm": 264.05426054,
+        "center_lat": 23.7652793,
+        "center_lon": 88.6614059
+      },
+      {
+        "upazila": "Mujibnagar",
+        "pcode": "BD40570060",
+        "area_sqkm": 113.93302383,
+        "center_lat": 23.66804173,
+        "center_lon": 88.62066855
+      }
+    ],
+    "Narail": [
+      {
+        "upazila": "Kalia",
+        "pcode": "BD40650028",
+        "area_sqkm": 300.75939745,
+        "center_lat": 23.02924849,
+        "center_lon": 89.64163082
+      },
+      {
+        "upazila": "Lohagara",
+        "pcode": "BD40650052",
+        "area_sqkm": 292.23366028,
+        "center_lat": 23.20424901,
+        "center_lon": 89.6241797
+      },
+      {
+        "upazila": "Narail Sadar",
+        "pcode": "BD40650076",
+        "area_sqkm": 390.9485302,
+        "center_lat": 23.15493941,
+        "center_lon": 89.49509628
+      }
+    ],
+    "Satkhira": [
+      {
+        "upazila": "Ashashuni",
+        "pcode": "BD40870004",
+        "area_sqkm": 378.4648572,
+        "center_lat": 22.51924727,
+        "center_lon": 89.18743219
+      },
+      {
+        "upazila": "Debhata",
+        "pcode": "BD40870025",
+        "area_sqkm": 173.45958755,
+        "center_lat": 22.5965225,
+        "center_lon": 89.01346306
+      },
+      {
+        "upazila": "Kalaroa",
+        "pcode": "BD40870043",
+        "area_sqkm": 233.44995598,
+        "center_lat": 22.88034049,
+        "center_lon": 89.03019097
+      },
+      {
+        "upazila": "Kaliganj",
+        "pcode": "BD40870047",
+        "area_sqkm": 330.10936754,
+        "center_lat": 22.44743606,
+        "center_lon": 89.06238055
+      },
+      {
+        "upazila": "Satkhira Sadar",
+        "pcode": "BD40870082",
+        "area_sqkm": 399.55035343,
+        "center_lat": 22.72028952,
+        "center_lon": 89.03826939
+      },
+      {
+        "upazila": "Shyamnagar",
+        "pcode": "BD40870086",
+        "area_sqkm": 2109.41337774,
+        "center_lat": 22.01217711,
+        "center_lon": 89.18060186
+      },
+      {
+        "upazila": "Tala",
+        "pcode": "BD40870090",
+        "area_sqkm": 338.55229682,
+        "center_lat": 22.73989638,
+        "center_lon": 89.21059096
+      }
+    ]
+  }
+}
