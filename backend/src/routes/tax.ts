@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient, PaymentStatus } from '@prisma/client';
+import { ok, fail } from '../lib/respond';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -10,7 +11,7 @@ router.post('/pay-tax', async (req: Request, res: Response) => {
   try {
     const taxRecord = await prisma.taxRecord.findFirst({ where: { parcelId, fiscalYear } });
     if (!taxRecord) {
-      return res.status(404).json({ error: 'Tax record not found for the specified fiscal year.' });
+      return fail(res, 'Tax record not found for the specified fiscal year.', 404);
     }
 
     const dakhilaNumber = `DAK-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -63,12 +64,12 @@ router.post('/pay-tax', async (req: Request, res: Response) => {
       console.log('n8n Webhook trigger notice:', err.message);
     });
 
-    res.json({
+    ok(res, {
       message: 'Payment verified and registered. Digital Dakhila issued.',
       taxRecord: updated,
     });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    fail(res, error.message);
   }
 });
 
@@ -82,10 +83,10 @@ router.get('/verify/:dakhilaNumber', async (req: Request, res: Response) => {
     });
 
     if (!taxRecord) {
-      return res.status(404).json({ valid: false, error: 'Dakhila record not found.' });
+      return fail(res, 'Dakhila record not found.', 404);
     }
 
-    res.json({
+    ok(res, {
       valid: true,
       dakhilaNumber: taxRecord.dakhilaNumber,
       fiscalYear: taxRecord.fiscalYear,
@@ -99,7 +100,7 @@ router.get('/verify/:dakhilaNumber', async (req: Request, res: Response) => {
       dagNo: taxRecord.parcel.dagNo,
     });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    fail(res, error.message);
   }
 });
 
