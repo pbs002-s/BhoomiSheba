@@ -301,26 +301,76 @@
 
 /* ============================================================
    PRINT — the দাখিলা is a real document, so it prints like one
+   Guaranteed 1-page A4 fit, perfect 2-column alignment, zero bleed
    ============================================================ */
 @media print {
-  body * {
-    visibility: hidden;
+  @page {
+    size: A4 portrait;
+    margin: 6mm 8mm;
   }
-  #printable-dakhila,
-  #printable-dakhila * {
-    visibility: visible;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    text-shadow: none !important;
   }
-  #printable-dakhila {
-    position: absolute;
-    inset: 0 auto auto 0;
-    width: 100%;
-    margin: 0;
-    padding: 24px;
-    background: #fff !important;
-    color: #000 !important;
-    border: none !important;
+
+  html,
+  body {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #0b0d0c !important;
+    overflow: visible !important;
   }
-  .no-print {
+
+  /* Hide background decorative canvases and elements */
+  canvas,
+  .no-print,
+  .no-print * {
     display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Printable dakhila and certificate */
+  #printable-dakhila,
+  #printable-clearance-certificate {
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 14px 18px !important;
+    background: #ffffff !important;
+    color: #0b0d0c !important;
+    border: 1.5px solid #1e3a5f !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-inside: avoid !important;
+    break-after: avoid !important;
+    overflow: visible !important;
+  }
+
+  #printable-dakhila *,
+  #printable-clearance-certificate * {
+    visibility: visible !important;
+  }
+
+  /* Force exact 2-column layout in print */
+  #printable-dakhila .dakhila-grid,
+  .print-grid-2 {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
   }
 }
+
