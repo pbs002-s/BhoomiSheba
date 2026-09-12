@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { cx } from '../lib/format';
+import { gsap, useGSAP, prefersReducedMotion } from '../lib/gsap';
 import type { GeoJsonFeature } from '../lib/types';
 
 /**
@@ -48,6 +49,10 @@ export default function ParcelPlate({
   onStationSelect,
 }: Props) {
   const [selectedStation, setSelectedStation] = useState<number | null>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const boundaryRef = useRef<SVGPolygonElement | null>(null);
+  const stationRefs = useRef<Array<SVGGElement | null>>([]);
+  const titleRef = useRef<SVGGElement | null>(null);
 
   // Extract raw coordinates [ [lng, lat], ... ]
   const rawCoords: number[][] = React.useMemo(() => {
@@ -128,6 +133,30 @@ export default function ParcelPlate({
 
   const anim = (delay: number) => (animate ? { className: 'draw-path', style: drawStyle(delay) } : {});
 
+  // Signature survey animation: the boundary draws itself via stroke length,
+  // then survey stations drop in with a spring, like pins set one by one.
+  useGSAP(
+    () => {
+      const boundary = boundaryRef.current;
+      if (!animate || !boundary || prefersReducedMotion()) return;
+      const stations = stationRefs.current.filter(Boolean) as SVGGElement[];
+      const len = boundary.getTotalLength();
+      gsap.set(boundary, { strokeDasharray: len, strokeDashoffset: len });
+      gsap.set(stations, { opacity: 0, scale: 0.4, transformOrigin: 'center' });
+      if (titleRef.current) gsap.set(titleRef.current, { opacity: 0, y: 6 });
+
+      const tl = gsap.timeline();
+      tl.to(boundary, { strokeDashoffset: 0, duration: 1.1, ease: 'power2.inOut' })
+        .to(
+          stations,
+          { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(2.6)', stagger: 0.08 },
+          '-=0.4'
+        )
+        .to(titleRef.current, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, '-=0.2');
+    },
+    { dependencies: [pointsString, animate], scope: svgRef }
+  );
+
   const handleStationClick = (node: (typeof projectedNodes)[0]) => {
     setSelectedStation(node.index);
     if (onStationSelect) {
@@ -138,6 +167,7 @@ export default function ParcelPlate({
   return (
     <figure className={cx('relative w-full select-none', className)}>
       <svg
+        ref={svgRef}
         viewBox="0 0 640 400"
         className="w-full"
         role="img"
@@ -173,13 +203,12 @@ export default function ParcelPlate({
         {/* Subject Cadastral Parcel Polygon */}
         <polygon points={pointsString} fill="var(--indigo)" opacity="0.08" />
         <polygon
+          ref={boundaryRef}
           points={pointsString}
           fill="none"
           stroke="var(--indigo)"
           strokeWidth="2"
           strokeLinejoin="round"
-          pathLength={1}
-          {...anim(340)}
         />
 
         {/* Corner Survey Stations (Node Markers) */}
@@ -188,8 +217,8 @@ export default function ParcelPlate({
           return (
             <g
               key={node.index}
-              className={cx('cursor-pointer', animate ? 'anim-mark-in' : undefined)}
-              style={{ animationDelay: `${1000 + i * 80}ms` }}
+              ref={(el) => (stationRefs.current[i] = el)}
+              className="cursor-pointer"
               onClick={() => handleStationClick(node)}
             >
               <rect
@@ -217,7 +246,7 @@ export default function ParcelPlate({
         })}
 
         {/* Subject Title and Area Plate Center Block */}
-        <g className={animate ? 'anim-mark-in' : undefined} style={{ animationDelay: '1350ms' }}>
+        <g ref={titleRef}>
           <text
             x={centroid.x}
             y={centroid.y - 14}
