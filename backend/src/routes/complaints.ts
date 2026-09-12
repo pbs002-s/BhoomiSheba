@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { ok, fail } from '../lib/respond';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -34,12 +35,9 @@ router.post('/', async (req: Request, res: Response) => {
       },
     });
 
-    res.status(201).json({
-      message: 'Complaint lodged and tracking token issued.',
-      complaint,
-    });
+    ok(res, { message: 'Complaint lodged and tracking token issued.', complaint }, 201);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    fail(res, error.message);
   }
 });
 
@@ -51,9 +49,9 @@ router.get('/', async (req: Request, res: Response) => {
       where: parcelId ? { parcelId: String(parcelId) } : undefined,
       orderBy: { createdAt: 'desc' },
     });
-    res.json(complaints);
+    ok(res, complaints);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    fail(res, error.message);
   }
 });
 
@@ -66,9 +64,9 @@ router.patch('/:id/status', async (req: Request, res: Response) => {
       where: { id },
       data: { status },
     });
-    res.json({ message: 'Complaint status updated.', complaint });
+    ok(res, { message: 'Complaint status updated.', complaint });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    fail(res, error.message);
   }
 });
 
