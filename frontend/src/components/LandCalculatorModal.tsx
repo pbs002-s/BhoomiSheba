@@ -40,10 +40,14 @@ export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.
   const [tClass, setTClass] = useState<string>('Homestead — বাস্তুভিটা');
   const [tArea, setTArea] = useState<number>(initialDecimal);
 
-  // Run conversion whenever val or unit changes
+  // Run conversion whenever val or unit changes, but only while the
+  // calculator is actually open — this component stays mounted (hidden)
+  // the rest of the time, and firing network calls from a closed modal
+  // both wastes requests and can misrepresent the live/demo data badge.
   useEffect(() => {
+    if (!open) return;
     convertLandUnits(val || 0, unit).then(setConverted);
-  }, [val, unit]);
+  }, [open, val, unit]);
 
   // Run Faraez calculation
   const handleFaraez = async (e?: React.FormEvent) => {
@@ -62,8 +66,8 @@ export default function LandCalculatorModal({ open, onClose, initialDecimal = 5.
   };
 
   useEffect(() => {
-    if (tab === 'faraez') handleFaraez();
-  }, [tab, fArea, sons, daughters, wife, husband, father, mother]);
+    if (open && tab === 'faraez') handleFaraez();
+  }, [open, tab, fArea, sons, daughters, wife, husband, father, mother]);
 
   // Calculate estimated tax
   const estimatedTax = React.useMemo(() => {

@@ -5,6 +5,8 @@ import { Button } from './ui';
 import { shortDate, decimals, katha, sqft, maskNid } from '../lib/format';
 import { useLanguage } from '../lib/language';
 
+import { printDocument, openPrintWindow } from '../lib/print';
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -19,7 +21,7 @@ export default function ClearanceCertificateModal({ open, onClose, parcel, repor
   if (!open) return null;
 
   const handlePrint = () => {
-    window.print();
+    printDocument('printable-clearance-certificate', `Clearance-Certificate-${report.verificationHash || parcel.id}`);
   };
 
   const isApproved = report.overallVerdict === 'APPROVED_FOR_TRANSACTION';
@@ -50,7 +52,7 @@ export default function ClearanceCertificateModal({ open, onClose, parcel, repor
         </div>
 
         {/* Printable Certificate Area */}
-        <div ref={printRef} className="p-8 sm:p-12 print:p-6 bg-white text-neutral-900 font-sans">
+        <div id="printable-clearance-certificate" ref={printRef} className="p-6 sm:p-10 print:p-4 bg-white text-neutral-900 font-sans">
           {/* Government Watermark & Seal Header */}
           <div className="text-center border-b-2 border-emerald-800 pb-5">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-900/10 text-emerald-800">

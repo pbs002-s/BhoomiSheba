@@ -2,31 +2,17 @@ import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { cx } from '../lib/format';
 
-export default function Modal({
-  open,
-  onClose,
-  label,
-  title,
-  bn,
-  children,
-  wide = false,
-}: {
-  open: boolean;
-  onClose: () => void;
-  label?: string;
-  title: string;
-  bn?: string;
-  children: React.ReactNode;
-  wide?: boolean;
-}) {
-  const panelRef = useRef<HTMLDivElement | null>(null);
-
+/**
+ * Shared dialog behaviour: Escape to close, focus trapped inside while
+ * open, body scroll locked, first focusable element focused on open.
+ * Any hand-rolled modal can call this instead of reimplementing it.
+ */
+export function useDialogA11y(open: boolean, onClose: () => void, panelRef: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
       if (e.key !== 'Tab') return;
-      // Keep focus inside the dialog.
       const focusables = panelRef.current?.querySelectorAll<HTMLElement>(
         'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
       );
@@ -49,7 +35,28 @@ export default function Modal({
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
     };
-  }, [open, onClose]);
+  }, [open, onClose, panelRef]);
+}
+
+export default function Modal({
+  open,
+  onClose,
+  label,
+  title,
+  bn,
+  children,
+  wide = false,
+}: {
+  open: boolean;
+  onClose: () => void;
+  label?: string;
+  title: string;
+  bn?: string;
+  children: React.ReactNode;
+  wide?: boolean;
+}) {
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  useDialogA11y(open, onClose, panelRef);
 
   if (!open) return null;
 

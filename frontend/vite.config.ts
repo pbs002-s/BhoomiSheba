@@ -13,4 +13,15 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          leaflet: ['leaflet'],
+          'lucide-react': ['lucide-react'],
+          gsap: ['gsap', '@gsap/react'],
+        },
+      },
+    },
+  },
 });

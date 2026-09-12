@@ -1,5 +1,18 @@
-import { demoParcels, findDemoParcel } from './demoData';
-import type { Complaint, Discrepancy, FaraezInput, FaraezShare, LandUnits, Mutation, MutationStatus, Parcel, Session, TaxRecord } from './types';
+import { demoParcels, findDemoParcel, getDemoDueDiligenceReport, toggleDemoParcelLock, demoSmsAlerts } from './demoData';
+import type {
+  Complaint,
+  Discrepancy,
+  DueDiligenceReport,
+  FaraezInput,
+  FaraezShare,
+  LandUnits,
+  Mutation,
+  MutationStatus,
+  Parcel,
+  Session,
+  SmsAlert,
+  TaxRecord,
+} from './types';
 
 export type DataSource = 'live' | 'demo';
 
@@ -26,9 +39,10 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
       signal: ctrl.signal,
       headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
     });
-    if (!res.ok) throw new Error(`${res.status}`);
+    const body = await res.json().catch(() => null);
+    if (!res.ok || !body?.success) throw new Error(body?.error || `${res.status}`);
     setSource('live');
-    return (await res.json()) as T;
+    return body.data as T;
   } finally {
     clearTimeout(timer);
   }
@@ -450,13 +464,12 @@ export function writeSession(session: Session | null) {
 
 /* ---------------------------------------------------------------- due diligence & title */
 
-export async function getDueDiligence(parcelId: string): Promise<import('./types').DueDiligenceReport> {
+export async function getDueDiligence(parcelId: string): Promise<DueDiligenceReport> {
   try {
-    return await req<import('./types').DueDiligenceReport>(`/api/parcels/${encodeURIComponent(parcelId)}/due-diligence`);
+    return await req<DueDiligenceReport>(`/api/parcels/${encodeURIComponent(parcelId)}/due-diligence`);
   } catch {
     setSource('demo');
     const p = findDemoParcel(parcelId) ?? demoParcels[0];
-    const { getDemoDueDiligenceReport } = await import('./demoData');
     return getDemoDueDiligenceReport(p);
   }
 }
@@ -471,25 +484,22 @@ export async function toggleParcelLock(parcelId: string, otp: string): Promise<{
     });
   } catch {
     setSource('demo');
-    const { toggleDemoParcelLock, findDemoParcel } = await import('./demoData');
     toggleDemoParcelLock(parcelId, otp);
     const p = findDemoParcel(parcelId);
     return { success: true, isLocked: !!p?.isLocked };
   }
 }
 
-export async function listSmsAlerts(): Promise<import('./types').SmsAlert[]> {
+export async function listSmsAlerts(): Promise<SmsAlert[]> {
   try {
-    return await req<import('./types').SmsAlert[]>('/api/alerts/sms');
+    return await req<SmsAlert[]>('/api/alerts/sms');
   } catch {
-    const { demoSmsAlerts } = await import('./demoData');
     return [...demoSmsAlerts];
   }
 }
 
-export async function sendSimulatedSms(alert: Partial<import('./types').SmsAlert>): Promise<import('./types').SmsAlert> {
-  const { demoSmsAlerts } = await import('./demoData');
-  const newAlert: import('./types').SmsAlert = {
+export async function sendSimulatedSms(alert: Partial<SmsAlert>): Promise<SmsAlert> {
+  const newAlert: SmsAlert = {
     id: `sms-${Date.now()}`,
     recipientPhone: alert.recipientPhone || '+880 1711-223344',
     senderId: 'BHUMISHEBA',

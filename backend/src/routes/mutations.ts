@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient, MutationStatus } from '@prisma/client';
+import { ok, fail } from '../lib/respond';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -62,12 +63,9 @@ router.post('/', async (req: Request, res: Response) => {
       },
     });
 
-    res.status(201).json({
-      message: 'Mutation application submitted successfully.',
-      mutation,
-    });
+    ok(res, { message: 'Mutation application submitted successfully.', mutation }, 201);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    fail(res, error.message);
   }
 });
 
@@ -83,7 +81,7 @@ router.patch('/:id/advance', async (req: Request, res: Response) => {
     });
 
     if (!existing) {
-      return res.status(404).json({ error: 'Mutation case not found.' });
+      return fail(res, 'Mutation case not found.', 404);
     }
 
     let targetStatus: MutationStatus = existing.status;
@@ -142,12 +140,9 @@ router.patch('/:id/advance', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
-      message: 'Mutation case updated successfully.',
-      mutation: updated,
-    });
+    ok(res, { message: 'Mutation case updated successfully.', mutation: updated });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    fail(res, error.message);
   }
 });
 

@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { CadastralService } from '../services/cadastralService';
+import { ok, fail } from '../lib/respond';
 
 const router = Router();
 
@@ -7,20 +8,17 @@ const router = Router();
 router.post('/convert-units', (req: Request, res: Response) => {
   const { value, fromUnit } = req.body;
   if (value === undefined || isNaN(Number(value))) {
-    return res.status(400).json({ error: 'Please provide a valid numeric value.' });
+    return fail(res, 'Please provide a valid numeric value.', 400);
   }
 
   const validUnits = ['decimal', 'katha', 'bigha', 'acre', 'sqft', 'sqm'];
   const unit = String(fromUnit || 'decimal').toLowerCase() as any;
   if (!validUnits.includes(unit)) {
-    return res.status(400).json({ error: `Invalid unit. Supported units: ${validUnits.join(', ')}` });
+    return fail(res, `Invalid unit. Supported units: ${validUnits.join(', ')}`, 400);
   }
 
   const result = CadastralService.convertUnits(Number(value), unit);
-  res.json({
-    input: { value: Number(value), fromUnit: unit },
-    result,
-  });
+  ok(res, { input: { value: Number(value), fromUnit: unit }, result });
 });
 
 // Faraez inheritance calculation endpoint
@@ -28,7 +26,7 @@ router.post('/faraez', (req: Request, res: Response) => {
   const { totalDecimal, sons = 0, daughters = 0, wife = 0, husband = 0, father = 0, mother = 0 } = req.body;
 
   if (totalDecimal === undefined || isNaN(Number(totalDecimal)) || Number(totalDecimal) <= 0) {
-    return res.status(400).json({ error: 'Please provide a valid total land area in decimals.' });
+    return fail(res, 'Please provide a valid total land area in decimals.', 400);
   }
 
   const calculation = CadastralService.calculateFaraez({
@@ -41,25 +39,18 @@ router.post('/faraez', (req: Request, res: Response) => {
     mother: Math.max(0, parseInt(mother, 10) || 0),
   });
 
-  res.json({
-    totalDecimal: Number(totalDecimal),
-    ...calculation,
-  });
+  ok(res, { totalDecimal: Number(totalDecimal), ...calculation });
 });
 
 // LD Tax demand estimation endpoint
 router.post('/estimate-tax', (req: Request, res: Response) => {
   const { landClass, decimalArea } = req.body;
   if (!landClass || decimalArea === undefined || isNaN(Number(decimalArea))) {
-    return res.status(400).json({ error: 'Please provide landClass and numeric decimalArea.' });
+    return fail(res, 'Please provide landClass and numeric decimalArea.', 400);
   }
 
   const estimate = CadastralService.estimateLdTax(String(landClass), Number(decimalArea));
-  res.json({
-    landClass,
-    decimalArea: Number(decimalArea),
-    ...estimate,
-  });
+  ok(res, { landClass, decimalArea: Number(decimalArea), ...estimate });
 });
 
 export default router;

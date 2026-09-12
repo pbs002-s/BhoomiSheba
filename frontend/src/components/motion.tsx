@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { cx } from '../lib/format';
+import { gsap, useGSAP, prefersReducedMotion } from '../lib/gsap';
 
-const reduced = () =>
-  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+const reduced = prefersReducedMotion;
 
 /* ------------------------------------------------------------------
    Reveal — enters once, on scroll. Never re-animates; content that
@@ -134,26 +134,25 @@ export function Counter({
     if (reduced()) return setValue(to);
     const el = ref.current;
     if (!el) return;
-    let raf = 0;
+    let tween: gsap.core.Tween | undefined;
     const io = new IntersectionObserver(
       ([e]) => {
         if (!e.isIntersecting) return;
         io.disconnect();
-        const start = performance.now();
-        const tick = (now: number) => {
-          const t = Math.min(1, (now - start) / duration);
-          // ease-out: fast commitment, gentle settle
-          setValue(to * (1 - Math.pow(1 - t, 3)));
-          if (t < 1) raf = requestAnimationFrame(tick);
-        };
-        raf = requestAnimationFrame(tick);
+        const counter = { val: 0 };
+        tween = gsap.to(counter, {
+          val: to,
+          duration: duration / 1000,
+          ease: 'power3.out',
+          onUpdate: () => setValue(counter.val),
+        });
       },
       { threshold: 0.4 }
     );
     io.observe(el);
     return () => {
       io.disconnect();
-      cancelAnimationFrame(raf);
+      tween?.kill();
     };
   }, [to, duration]);
 
@@ -163,6 +162,50 @@ export function Counter({
       {value.toLocaleString('en-BD', { minimumFractionDigits: dp, maximumFractionDigits: dp })}
       {suffix}
     </span>
+  );
+}
+
+/* ------------------------------------------------------------------
+   Stagger — entrance for record cards, table rows and timeline items.
+   Animates its own direct children with a GSAP stagger each time
+   `watch` changes (e.g. a parcel switch or a new record arriving).
+   ------------------------------------------------------------------ */
+export function Stagger({
+  children,
+  className,
+  as: Tag = 'div',
+  watch,
+  y = 10,
+  amount = 0.4,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  as?: React.ElementType;
+  watch?: unknown;
+  y?: number;
+  amount?: number;
+}) {
+  const ref = useRef<HTMLElement | null>(null);
+
+  useGSAP(
+    () => {
+      const el = ref.current;
+      if (!el || reduced()) return;
+      const items = Array.from(el.children);
+      if (!items.length) return;
+      gsap.fromTo(
+        items,
+        { opacity: 0, y },
+        { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', stagger: 0.06, overwrite: true }
+      );
+    },
+    { dependencies: [watch, React.Children.count(children)], scope: ref as React.RefObject<HTMLElement> }
+  );
+
+  return (
+    <Tag ref={ref as never} className={className}>
+      {children}
+    </Tag>
   );
 }
 

@@ -65,6 +65,7 @@ const LAYER_TILES: Record<string, { url: string; attribution: string; maxZoom?: 
 
 
 import { toBTM, toLinks, toGaj, toFeet } from '../lib/format';
+import { gsap, prefersReducedMotion } from '../lib/gsap';
 
 export default function LeafletMap({
   geojson,
@@ -318,6 +319,18 @@ export default function LeafletMap({
           onStationSelect({ index: idx, lat, lng, label, btm: btm.formatted });
         }
       });
+
+      if (!prefersReducedMotion()) {
+        marker.on('add', () => {
+          const pin = marker.getElement()?.firstElementChild;
+          if (!pin) return;
+          gsap.fromTo(
+            pin,
+            { scale: 0, opacity: 0 },
+            { scale: 1, opacity: 1, duration: 0.45, ease: 'back.out(2.5)', delay: idx * 0.06 }
+          );
+        });
+      }
 
       if (markersGroupRef.current) {
         markersGroupRef.current.addLayer(marker);

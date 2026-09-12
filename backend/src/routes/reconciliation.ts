@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { ok, fail } from '../lib/respond';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -14,7 +15,7 @@ router.post('/run', async (req: Request, res: Response) => {
     });
 
     if (!parcel) {
-      return res.status(404).json({ error: `Parcel ${parcelId} not found.` });
+      return fail(res, `Parcel ${parcelId} not found.`, 404);
     }
 
     const auditResult = {
@@ -49,9 +50,9 @@ router.post('/run', async (req: Request, res: Response) => {
       discrepanciesFound: parcel.discrepancies.filter((d) => !d.isResolved).length,
     };
 
-    res.json(auditResult);
+    ok(res, auditResult);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    fail(res, error.message);
   }
 });
 
@@ -81,12 +82,9 @@ router.patch('/flags/:id/resolve', async (req: Request, res: Response) => {
       },
     });
 
-    res.json({
-      message: 'Discrepancy marked as resolved.',
-      discrepancy,
-    });
+    ok(res, { message: 'Discrepancy marked as resolved.', discrepancy });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    fail(res, error.message);
   }
 });
 

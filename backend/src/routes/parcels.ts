@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { ok, fail } from '../lib/respond';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -56,9 +57,9 @@ router.get('/', async (req: Request, res: Response) => {
       },
       orderBy: { id: 'asc' },
     });
-    res.json(parcels);
+    ok(res, parcels);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    fail(res, error.message);
   }
 });
 
@@ -79,12 +80,12 @@ router.get('/:parcelId', async (req: Request, res: Response) => {
     });
 
     if (!parcel) {
-      return res.status(404).json({ error: `Parcel ${parcelId} not found in authoritative records.` });
+      return fail(res, `Parcel ${parcelId} not found in authoritative records.`, 404);
     }
 
-    res.json(parcel);
+    ok(res, parcel);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    fail(res, error.message);
   }
 });
 

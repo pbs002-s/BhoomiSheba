@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Loader2, CheckCircle2, ArrowRight, XCircle } from 'lucide-react';
 import type { Mutation, MutationStatus, Parcel } from '../../lib/types';
-import { fileMutation, advanceMutation, readSession } from '../../lib/api';
-import { Button, Field, Panel, StatusMark, inputClass } from '../../components/ui';
-import { Reveal } from '../../components/motion';
-import Modal from '../../components/Modal';
+import { advanceMutation, readSession } from '../../lib/api';
+import { Button, Panel, StatusMark, inputClass } from '../../components/ui';
+import { Reveal, Stagger } from '../../components/motion';
+import Modal, { useDialogA11y } from '../../components/Modal';
+import MutationWizard from '../../components/MutationWizard';
 import { cx, shortDate, taka } from '../../lib/format';
 
 const STAGES: Array<{ key: MutationStatus; en: string; bn: string }> = [
@@ -63,10 +64,7 @@ export default function MutationsPanel({ parcel, onChanged }: { parcel: Parcel; 
 
   const mutations = parcel.mutations ?? [];
   const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [actingId, setActingId] = useState<string | null>(null);
   const [filed, setFiled] = useState<Mutation | null>(null);
-  const [form, setForm] = useState({ applicantName: '', applicantNid: '', applicantPhone: '', proposedOwner: '' });
 
   // Officer Judicial Modal State
   const [selectedMutation, setSelectedMutation] = useState<Mutation | null>(null);
@@ -74,18 +72,12 @@ export default function MutationsPanel({ parcel, onChanged }: { parcel: Parcel; 
   const [orderNote, setOrderNote] = useState('');
   const [hearingDate, setHearingDate] = useState('');
   const [submittingOrder, setSubmittingOrder] = useState(false);
+  const judicialModalRef = useRef<HTMLDivElement | null>(null);
+  useDialogA11y(!!selectedMutation, () => setSelectedMutation(null), judicialModalRef);
 
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    const { mutation } = await fileMutation({ parcelId: parcel.id, ...form });
-    setBusy(false);
+  const handleWizardDone = (mutation: Mutation) => {
     setOpen(false);
     setFiled(mutation);
-    setForm({ applicantName: '', applicantNid: '', applicantPhone: '', proposedOwner: '' });
     onChanged();
   };
 
@@ -152,9 +144,9 @@ export default function MutationsPanel({ parcel, onChanged }: { parcel: Parcel; 
             </Panel>
           </Reveal>
         ) : (
-          mutations.map((m, i) => (
-            <Reveal key={m.id} delay={i * 70}>
-              <Panel label={m.caseNumber} meta={shortDate(m.createdAt)}>
+          <Stagger watch={parcel.id} className="space-y-5">
+            {mutations.map((m) => (
+              <Panel key={m.id} label={m.caseNumber} meta={shortDate(m.createdAt)}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-sm text-ink">
@@ -221,55 +213,13 @@ export default function MutationsPanel({ parcel, onChanged }: { parcel: Parcel; 
                   </div>
                 )}
               </Panel>
-            </Reveal>
-          ))
+            ))}
+          </Stagger>
         )}
       </div>
 
-      <Modal open={open} onClose={() => setOpen(false)} label={parcel.id} title="File a নামজারি" bn="নামজারির আবেদন">
-        <form onSubmit={submit} className="space-y-4">
-          <Field label="Applicant name (আবেদনকারীর নাম)" htmlFor="an">
-            <input id="an" required value={form.applicantName} onChange={set('applicantName')} className={inputClass} />
-          </Field>
-          <Field label="Applicant NID (জাতীয় পরিচয়পত্র)" htmlFor="anid">
-            <input
-              id="anid"
-              required
-              inputMode="numeric"
-              value={form.applicantNid}
-              onChange={set('applicantNid')}
-              className={`${inputClass} mono tnum`}
-            />
-          </Field>
-          <Field label="Mobile number (মোবাইল নম্বর)" htmlFor="aph" hint="Hearing notices are sent to this number.">
-            <input
-              id="aph"
-              required
-              inputMode="tel"
-              value={form.applicantPhone}
-              onChange={set('applicantPhone')}
-              className={`${inputClass} mono tnum`}
-            />
-          </Field>
-          <Field label="Proposed Owner (কার নামে নামজারি হবে)" htmlFor="po">
-            <input id="po" required value={form.proposedOwner} onChange={set('proposedOwner')} className={inputClass} />
-          </Field>
-
-          <p className="border-l-2 border-line-strong bg-ground-sunk px-3 py-2 text-xs text-ink-3">
-            The current recorded owner is notified as soon as this is filed. Standard government DCR fee of {taka(1150)} is payable
-            after the AC Land hearing.
-          </p>
-
-          <div className="flex gap-2 pt-1">
-            <Button type="button" className="flex-1" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary" type="submit" className="flex-1" disabled={busy}>
-              {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-              {busy ? 'Filing' : 'File Application'}
-            </Button>
-          </div>
-        </form>
+      <Modal open={open} onClose={() => setOpen(false)} label={parcel.id} title="File a নামজারি" bn="নামজারির আবেদন" wide>
+        <MutationWizard parcel={parcel} onDone={handleWizardDone} onCancel={() => setOpen(false)} />
       </Modal>
 
       <Modal open={!!filed} onClose={() => setFiled(null)} label="Filed" title="Application Received">
@@ -291,7 +241,13 @@ export default function MutationsPanel({ parcel, onChanged }: { parcel: Parcel; 
       {/* AC Land Judicial Ruling Modal */}
       {selectedMutation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-lg border border-line bg-sheet p-6 shadow-xl animate-sheet-in">
+          <div
+            ref={judicialModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="AC (Land) judicial ruling"
+            className="relative w-full max-w-lg border border-line bg-sheet p-6 shadow-xl animate-sheet-in"
+          >
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div>
                 <h3 className="sheet-title text-base font-semibold text-ink">
@@ -301,7 +257,11 @@ export default function MutationsPanel({ parcel, onChanged }: { parcel: Parcel; 
                   মামলা নং: {selectedMutation.caseNumber} &middot; {parcel.upazila}, মৌজা: {parcel.mouza}
                 </p>
               </div>
-              <button onClick={() => setSelectedMutation(null)} className="text-ink-3 hover:text-ink">
+              <button
+                onClick={() => setSelectedMutation(null)}
+                aria-label="Close"
+                className="text-ink-3 hover:text-ink"
+              >
                 ✕
               </button>
             </div>
