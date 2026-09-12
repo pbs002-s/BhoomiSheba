@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ShieldCheck,
   CreditCard,
@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { payTax } from '../lib/api';
+import { useDialogA11y } from './Modal';
 import type { Parcel, TaxRecord } from '../lib/types';
 import { taka } from '../lib/format';
 
@@ -100,6 +101,8 @@ export default function PaymentGatewayModal({
   const [countdown, setCountdown] = useState(60);
   const [error, setError] = useState<string | null>(null);
   const [completedRecord, setCompletedRecord] = useState<TaxRecord | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  useDialogA11y(open, onClose, panelRef);
 
   // Reset states when opening modal
   useEffect(() => {
@@ -191,7 +194,13 @@ export default function PaymentGatewayModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-3 sm:p-4 backdrop-blur-sm">
-      <div className="relative my-auto w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden rounded-lg border border-line bg-sheet shadow-2xl">
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${currentGateway.name} payment`}
+        className="relative my-auto w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden rounded-lg border border-line bg-sheet shadow-2xl"
+      >
         {/* Gateway Branded Header */}
         <div
           className="flex shrink-0 items-center justify-between px-6 py-4 text-white"
